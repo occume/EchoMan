@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.json.JSONArray;
@@ -28,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import sun.org.mozilla.javascript.internal.NativeObject;
 import jodd.util.HtmlDecoder;
 
-import com.echoman.AbstractRobot;
 import com.echoman.model.RobotBean;
-import com.echoman.util.LoginedHttpClient;
+import com.echoman.robot.AbstractRobot;
+import com.echoman.robot.Robot;
 
 public class QQRobot extends AbstractRobot{
 	
@@ -43,7 +40,7 @@ public class QQRobot extends AbstractRobot{
 		super(bean);
 	}
 	
-	public void login(){
+	public Robot login(){
 		
 		xlogin();
 		
@@ -53,6 +50,7 @@ public class QQRobot extends AbstractRobot{
 		} catch (Exception e) {
 			LOG.error("Login fail, {}", e);
 		}
+		return this;
 	}
 	
 	public void sign(){
@@ -83,7 +81,7 @@ public class QQRobot extends AbstractRobot{
 		
 		getBkn(http.getCookie("skey"));
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("gc", groupId);
 		params.put("is_sign", "0");
 		params.put("bkn", bkn);
@@ -307,7 +305,7 @@ public class QQRobot extends AbstractRobot{
 
 		getBkn(http.getCookie("skey"));
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		if(seq == 0){
 			preShowMessage();
 			params.put("ps", "60");
@@ -398,7 +396,7 @@ public class QQRobot extends AbstractRobot{
 		LOG.debug("Geg bkn: {}", bds.get("bkn"));
 	}
 	
-	private static Map<String, String> getGeneralHeaders(){
+	public Map<String, String> getGeneralHeaders(){
 		
 		Map<String, String> hds = new HashMap<>();
 
@@ -437,6 +435,11 @@ public class QQRobot extends AbstractRobot{
 	@Override
 	public void backgroundProcess() {
 		
+	}
+
+	@Override
+	public String getJSFileDirectory() {
+		return "com/echoman/robot/qq/";
 	}
 
 }

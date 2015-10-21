@@ -1,4 +1,4 @@
-package com.echoman;
+package com.echoman.robot;
 
 import java.util.Date;
 import java.util.Set;
@@ -11,21 +11,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.echoman.SpringContext;
 import com.echoman.model.RobotBean;
 import com.echoman.robot.baidu.BaiduRobot;
 import com.echoman.robot.hujiang.HujiangRobot;
 import com.echoman.robot.qq.QQRobot;
 import com.echoman.util.Config;
 
-@Component
 public class Robots {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(Robots.class);
-	private ConcurrentHashMap<String, Robot> robots = new ConcurrentHashMap<>();
-
-	public static Robots instance(){
-		return (Robots) SpringContext.getBean("robots");
-	}
+	
+	private static ConcurrentHashMap<String, Robot> robots = new ConcurrentHashMap<>();
 	
 	public Robot getRobot(String vender, String owner){
 		return robots.get(rename(vender, owner));
@@ -50,25 +47,15 @@ public class Robots {
 			return;
 		}
 		
-		for(RobotBean bean: robots){
-			enroll(bean.getType(), bean.getAccount(), newRobot(bean));
-		}
+//		for(RobotBean bean: robots){
+//			enroll(bean.getType(), bean.getAccount(), newRobot(bean));
+//		}
 		
 		LOG.info("{} robots are enrolled: {}", robots.size(), robots);
-		
-//		backgroundSign();
 	}
 	
-	public Robot newRobot(RobotBean bean){
-		Robot robot = null;
-		switch(bean.getType()){
-			case "BAIDU": 	robot = new BaiduRobot(bean); 	break;
-			case "QQ": 		robot = new QQRobot(bean); 		break;
-			case "HUJIANG": robot = new HujiangRobot(bean); break;
-			default: 		robot = new DefaultRobot();
-		}
-		
-		return robot;
+	public static Robot newRobot(RobotType type){
+		return Factorys.getFactory(type).newRobot(RobotBean.EMPTY);
 	}
 	
 	@Scheduled(cron = "0 30 10 * * *")

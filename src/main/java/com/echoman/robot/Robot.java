@@ -1,9 +1,9 @@
-package com.echoman;
+package com.echoman.robot;
 
 import java.util.Map;
 
-import com.echoman.baidu.model.UserInfo;
 import com.echoman.model.Response;
+import com.echoman.robot.baidu.model.UserInfo;
 import com.echoman.util.LoginedHttpClient;
 
 public interface Robot {
@@ -20,7 +20,15 @@ public interface Robot {
 	
 	public LoginedHttpClient getHttpClient();
 	
-	public void login();
+	public Robot login();
 	
 	public boolean isLogin();
+	
+	public Map<String, String> getGeneralHeaders();
+	
+	public Robot setAccount(String account);
+	
+	public Robot setPassword(String password);
+	
+	public void sign();
 }

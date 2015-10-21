@@ -1,4 +1,4 @@
-package com.echoman.baidu.model;
+package com.echoman.robot.baidu.model;
 
 import java.util.HashSet;
 import java.util.Set;

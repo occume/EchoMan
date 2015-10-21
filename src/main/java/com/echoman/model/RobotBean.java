@@ -2,6 +2,8 @@ package com.echoman.model;
 
 public class RobotBean {
 	
+	public static final RobotBean EMPTY = new RobotBean();
+	
 	private String type;
 	private String account;
 	private String password;

@@ -11,9 +11,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.echoman.baidu.model.PostInfo;
 import com.echoman.model.Response;
+import com.echoman.robot.Robot;
+import com.echoman.robot.Robots;
 import com.echoman.robot.baidu.BaiduRobot;
+import com.echoman.robot.baidu.model.PostInfo;
 
 @Controller
 public class Router {

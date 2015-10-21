@@ -1,4 +1,4 @@
-package com.echoman.baidu.model;
+package com.echoman.robot.baidu.model;
 
 public class ForumInfo {
 

@@ -19,8 +19,9 @@ import javax.script.ScriptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.echoman.AbstractRobot;
 import com.echoman.model.RobotBean;
+import com.echoman.robot.AbstractRobot;
+import com.echoman.robot.Robot;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 
@@ -114,7 +115,7 @@ public class HujiangRobot extends  AbstractRobot{
 		System.out.println(ctt);
 	}
 	
-	private static Map<String, String> getGeneralHeaders(){
+	public Map<String, String> getGeneralHeaders(){
 		
 		Map<String, String> hds = new HashMap<>();
 
@@ -133,6 +134,15 @@ public class HujiangRobot extends  AbstractRobot{
 
 	@Override
 	public void backgroundSign() {
+		sign();
+	}
+
+	@Override
+	public void backgroundProcess() {
+		
+	}
+	@Override
+	public void sign(){
 		LOG.info("Hujiang sign");
 		try {
 			login();
@@ -140,20 +150,20 @@ public class HujiangRobot extends  AbstractRobot{
 		} catch (Exception e) {
 			LOG.error("Sign fail, {}", e);
 		}
-		
 	}
 
 	@Override
-	public void backgroundProcess() {
-		
-	}
-
-	@Override
-	public void login() {
+	public Robot login() {
 		try {
 			doLogin();
 		} catch (Exception e) {
 			LOG.error("Login fail, {}", e);
 		}
+		return this;
+	}
+
+	@Override
+	public String getJSFileDirectory() {
+		return "com/echoman/robot/hujiang/";
 	}
 }
