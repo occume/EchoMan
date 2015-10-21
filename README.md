@@ -1,9 +1,11 @@
 # EchoMan
 
 Usage:
+
 	// 
 	
 	//login and sign
+
 	Robot baiduRobot = Robots.newRobot(RobotType);
 	baiduRobot
 	.setAccount(account)
