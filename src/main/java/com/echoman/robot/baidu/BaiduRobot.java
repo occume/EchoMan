@@ -35,13 +35,14 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.echoman.AbstractRobot;
-import com.echoman.baidu.model.ForumInfo;
-import com.echoman.baidu.model.PostInfo;
-import com.echoman.baidu.model.UserInfo;
 import com.echoman.d3f.Tuling;
 import com.echoman.model.Response;
 import com.echoman.model.RobotBean;
+import com.echoman.robot.AbstractRobot;
+import com.echoman.robot.Robot;
+import com.echoman.robot.baidu.model.ForumInfo;
+import com.echoman.robot.baidu.model.PostInfo;
+import com.echoman.robot.baidu.model.UserInfo;
 import com.echoman.util.Scheduler;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -69,7 +70,7 @@ public class BaiduRobot extends AbstractRobot{
 	}
 	
 	@Override
-	public void login() {
+	public Robot login() {
 		try {
 			doLogin();
 		} catch (IOException e) {
@@ -90,6 +91,7 @@ public class BaiduRobot extends AbstractRobot{
 //				}
 //			}
 //		}, "1", 600);
+		return this;
 	}
 	
 	public void replyReplyme() throws Exception{
@@ -120,7 +122,8 @@ public class BaiduRobot extends AbstractRobot{
 		
 		for(int i = replies.size() - 1; i >=0; i--){
 			String[] item = replies.get(i);
-//			System.out.println(item[0] + " == " + item[1] + " == " + item[2]);
+			LOG.debug("Item1: {}; Item2: {}; Item3: {}",
+					new Object[]{item[0], item[1], item[2]}); 
 			Date replyDate = df.parse("2015-" + item[1]);
 			
 			if(replyDate.after(lastReplyReplymeDate)){
@@ -128,6 +131,14 @@ public class BaiduRobot extends AbstractRobot{
 				replyReplyme0(item);
 				Thread.sleep(random(2000, 10000));
 			}
+		}
+	}
+	
+	public void replyThread(String tid, String content){
+		try {
+			interReply(tid, content);
+		} catch (Exception e) {
+			LOG.error("Reply thread error, {}", e);
 		}
 	}
 	
@@ -244,7 +255,7 @@ public class BaiduRobot extends AbstractRobot{
 	
 	private void getCookie(){
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "www.baidu.com");
 		hds.remove("Referer");
 		
@@ -258,7 +269,7 @@ public class BaiduRobot extends AbstractRobot{
 				+ "tt="+ System.currentTimeMillis() +"&class=login&"
 				+ "gid="+ gid +"&logintype=dialogLogin&"
 				+ "callback=getToken";
-		String content = http.get(url, getCommonHeaders());
+		String content = http.get(url, getGeneralHeaders());
 		
 		engine.eval(content);
 		
@@ -337,9 +348,9 @@ public class BaiduRobot extends AbstractRobot{
 		String rsakey = bds.get("rsakey").toString();
 		String encryptPassword = bds.get("encryptPassword").toString();
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = getParamsMap();
 		params.put("apiver", "v3");
 		params.put("callback", "parent.bd__pcbs__tpnjeu");
 		params.put("charset", "UTF-8");
@@ -387,7 +398,7 @@ public class BaiduRobot extends AbstractRobot{
 	public void getProfile(){
 		String url = "http://tieba.baidu.com/";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Referer", "https://www.baidu.com/index.php?tn=monline_3_dg");
 		
 		String html = http.get(url);
@@ -518,13 +529,13 @@ public class BaiduRobot extends AbstractRobot{
 		
 		String url = "http://tieba.baidu.com/f/commit/post/add";
 			
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Origin", "http://tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com/p/" + info.tid);
 		hds.put("X-Requested-With", "XMLHttpRequest");
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		
 		params.put("ie", "utf-8");
 		params.put("kw", lastPostInfo.getForumName());
@@ -549,7 +560,7 @@ public class BaiduRobot extends AbstractRobot{
 	public List<String[]> getReplies() throws JSONException{
 		String url = "http://tieba.baidu.com/i/sys/jump?u=" + portrait + "&type=replyme";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com/");
 		
@@ -596,7 +607,7 @@ public class BaiduRobot extends AbstractRobot{
 	public void getUnread(){
 		String url = "http://tieba.baidu.com/im/pcmsg/query/getAllUnread?_=1443521085338";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com/");
 		hds.put("X-Requested-With", "XMLHttpRequest");
@@ -616,7 +627,7 @@ public class BaiduRobot extends AbstractRobot{
 		
 		String url = "http://tieba.baidu.com/home/post?un=" + un + "&fr=home";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com/home/main?id=442ab7e7ceaacbadb8e8b306&fr=itb");
 		
@@ -657,20 +668,20 @@ public class BaiduRobot extends AbstractRobot{
 	public void onekeySign(String formName) throws IOException{
 		String url = "http://tieba.baidu.com/sign/add";
 		
-		Map<String, String> headers = getCommonHeaders();
+		Map<String, String> headers = getGeneralHeaders();
 		headers.put("Host", "tieba.baidu.com");
 		headers.put("Referer", "http://tieba.baidu.com/");
 		headers.put("x-requested-with", "XMLHttpRequest");
 		headers.remove("Cookie");
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		
 		params.put("ie", "utf-8");
 		params.put("tbs", "");
 		params.put("kw", formName);
 		
 		String content = http.post(url, params, headers);
-		System.out.println(content);
+//		System.out.println(content);
 		String no = "";
 		String noMsg = "";
 		
@@ -701,7 +712,7 @@ public class BaiduRobot extends AbstractRobot{
 		
 		String url = "http://tieba.baidu.com" + tid;
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com/p/"+ tid +"?pn=1");
 		
@@ -712,7 +723,7 @@ public class BaiduRobot extends AbstractRobot{
 	private List<String> getForumInfo(String forumName){
 		String url = "http://tieba.baidu.com/f?kw="+ forumName +"&ie=utf-8";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Host", "tieba.baidu.com");
 		hds.put("Referer", "http://tieba.baidu.com");
 		
@@ -863,7 +874,7 @@ public class BaiduRobot extends AbstractRobot{
 		
 		String url = "http://tieba.baidu.com/f/commit/post/add";
 		
-		Map<String, String> hds = getCommonHeaders();
+		Map<String, String> hds = getGeneralHeaders();
 		hds.put("Accept", "application/json, text/javascript, */*; q=0.01");
 		hds.put("Cache-Control", "no-cache");
 		hds.put("Host", "tieba.baidu.com");
@@ -871,7 +882,7 @@ public class BaiduRobot extends AbstractRobot{
 		hds.put("X-Requested-With", "XMLHttpRequest");
 		hds.remove("Cookie");
 	
-		Map<String, String> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		
 		params.put("__type__", "reply");
 		params.put("content", replyContent);
@@ -906,17 +917,12 @@ public class BaiduRobot extends AbstractRobot{
 		}
 	}
 	
-	private static Map<String, String> getCommonHeaders(){
+	public Map<String, String> getGeneralHeaders(){
 		
-		Map<String, String> hds = new HashMap<>();
+		Map<String, String> hds = super.getGeneralHeaders();
 
-		hds.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-		hds.put("Accept-Encoding", "gzip, deflate");
-		hds.put("Accept-Language", "zh-CN,zh:q=0.8,en-US:q=0.5,en:q=0.3");
-		hds.put("Connection", "keep-alive");
 		hds.put("Host", "passport.baidu.com");
 		hds.put("Referer", "http://www.baidu.com/");
-		hds.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/40.0");
 		
 		return hds;
 	}
@@ -955,17 +961,7 @@ public class BaiduRobot extends AbstractRobot{
 	
 	@Override
 	public void backgroundSign() {
-		if(!isLogin()){
-			login();
-		}
-		for(ForumInfo finfo: userInfo.getForums()){
-			try {
-				onekeySign(finfo.getName());
-				Thread.sleep(1000);
-			} catch (Exception e) {
-				LOG.error("Sign error, {}", e.getStackTrace());
-			}
-		}
+		sign();
 	}
 	
 	@Override
@@ -982,6 +978,26 @@ public class BaiduRobot extends AbstractRobot{
 	
 	private static int random(int m, int n){
 		return (int) (Math.random() * (n - m) + m);
+	}
+
+	@Override
+	public String getJSFileDirectory() {
+		return "com/echoman/robot/baidu/";
+	}
+
+	@Override
+	public void sign() {
+		if(!isLogin()){
+			login();
+		}
+		for(ForumInfo finfo: userInfo.getForums()){
+			try {
+				onekeySign(finfo.getName());
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				LOG.error("Sign error, {}", e.getStackTrace());
+			}
+		}
 	}
 }
 

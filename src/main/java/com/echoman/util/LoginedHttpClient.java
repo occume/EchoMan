@@ -12,11 +12,14 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.RedirectStrategy;
 import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.cookie.Cookie;
@@ -26,6 +29,7 @@ import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BestMatchSpecFactory;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
@@ -64,8 +68,20 @@ public class LoginedHttpClient {
 				.register("easy", easySpecProvider)
 				.build();
 		
+		RequestConfig requestConfig = 
+				RequestConfig.custom()
+				.setCircularRedirectsAllowed(false)
+				.setRelativeRedirectsAllowed(false)
+				.setRedirectsEnabled(false)
+				.build();
+		
+		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+//		redirectStrategy.
+		
 		httpClient = HttpClients
 				.custom()
+				.setDefaultRequestConfig(requestConfig)
+				.setRedirectStrategy(redirectStrategy)
 				.setDefaultCookieSpecRegistry(registry)
 				.setDefaultCookieStore(cookieStore)
 				.build();
@@ -95,14 +111,16 @@ public class LoginedHttpClient {
 		
 		int statusCode = httpResponse.getStatusLine().getStatusCode();
 		String ret = null;
-		if (HttpStatus.SC_OK != statusCode) {
+		if (HttpStatus.SC_OK == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode) {
+			if (httpResponse.getEntity() != null) {
+				ret = EntityUtils.toString(httpResponse.getEntity(),
+						getEntityEncode(httpResponse.getEntity()));
+			}
+		}
+		else{
 			LOG.info("Status code is not ok: " + statusCode);
-			return ret;
 		}
-		if (httpResponse.getEntity() != null) {
-			ret = EntityUtils.toString(httpResponse.getEntity(),
-					getEntityEncode(httpResponse.getEntity()));
-		}
+		
 		return ret;
 	}
 	
@@ -130,7 +148,7 @@ public class LoginedHttpClient {
 			ret = doGet(url, headers);
 			
 		}catch(IOException e) {
-			LOG.error("Remote request error: {}", e.getMessage());
+			LOG.error("Remote request error: {}", e);
 		}
 		return ret;
 	}
@@ -140,7 +158,7 @@ public class LoginedHttpClient {
 		String content = "";
 		CloseableHttpResponse response = null;
 		HttpGet httpGet = new HttpGet(url);
-		
+//		System.out.println(httpGet.getConfig().isCircularRedirectsAllowed());
 		try {
 			
 			if(headers != null){
@@ -186,7 +204,7 @@ public class LoginedHttpClient {
 		return ret;
 	}
 	
-	public String post(String url, Map<String, String> params, Map<String, String> headers){
+	public String post(String url, Map<String, Object> params, Map<String, String> headers){
 		
 		String ret = null;
 		try {
@@ -199,7 +217,7 @@ public class LoginedHttpClient {
 		return ret;
 	}
 	
-	private String doPost(String url, Map<String, String> params, Map<String, String> headers)
+	private String doPost(String url, Map<String, Object> params, Map<String, String> headers)
 			throws IOException {
 		
 		String content = "";
@@ -209,7 +227,7 @@ public class LoginedHttpClient {
 			Iterator<String> it = params.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
-				String value = params.get(key);
+				String value = String.valueOf(params.get(key));
 				nvps.add(new BasicNameValuePair(key, value));
 			}
 		}
