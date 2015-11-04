@@ -2,6 +2,7 @@ package com.echoman.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+
 import com.echoman.model.RobotBean;
+import com.echoman.robot.RobotType;
+import com.google.common.collect.Sets;
 
 public class Config {
 
@@ -40,6 +44,24 @@ public class Config {
 			LOG.error("Fail to read config, {}", e);
 			System.exit(0);
 		}
+	}
+	
+	public static Set<RobotBean> getRobotBeans(RobotType type){
+		
+		Set<RobotBean> result = Sets.newHashSet();
+		
+		try {
+			Set<RobotBean> all = getObjects(RobotBean.class);
+			for(RobotBean bean: all){
+				if(type.name().equalsIgnoreCase(bean.getType())){
+					result.add(bean);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
 	}
 	
 	public static<T> Set<T> getObjects(Class<T> temp) throws Exception{

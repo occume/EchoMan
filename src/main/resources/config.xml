@@ -3,12 +3,21 @@
 	
 	<robots>
 	
+		<!-- WEIBO Account -->
+		
 		<robot>
-			<type></type>
+			<type>WEIBO</type>
 			<account></account>
 			<password></password>
 		</robot>
 		
+		<!-- BAIDU Account -->
+		
+		<robot>
+			<type>BAIDU</type>
+			<account></account>
+			<password></password>
+		</robot>
 		
 	</robots>
 	

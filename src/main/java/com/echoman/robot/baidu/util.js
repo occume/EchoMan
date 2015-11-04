@@ -3874,6 +3874,7 @@ var navigator = {
 //    encrypt = passport.lib.RSA.encrypt;
     var RSA = new passport.lib.RSA();
     RSA.setKey(cert.pubkey);
+   // print("cert.pubkey = " + cert.pubkey);
 //    print(RSA.parseKey);
     var rsakey = cert.key;
 //    var encryptPassword = baidu.url.escapeSymbol(RSA.encrypt(rawPassword));

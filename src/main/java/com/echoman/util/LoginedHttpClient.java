@@ -6,9 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -19,7 +21,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.ClientPNames;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.cookie.Cookie;
@@ -43,10 +44,12 @@ import com.google.common.base.Strings;
 
 public class LoginedHttpClient {
 	
-	private CloseableHttpClient httpClient;
-	private BasicCookieStore cookieStore;
 	private final static Logger LOG = LoggerFactory.getLogger(LoginedHttpClient.class);
 	
+	private CloseableHttpClient httpClient;
+	private BasicCookieStore cookieStore;
+	
+	private AtomicInteger requestCount = new AtomicInteger(0);
 	private boolean logined;
 	
 	public boolean isLogined() {
@@ -55,6 +58,10 @@ public class LoginedHttpClient {
 
 	public void setLogined(boolean logined) {
 		this.logined = logined;
+	}
+	
+	public int getRequestCount(){
+		return requestCount.get();
 	}
 
 	private LoginedHttpClient(){
@@ -73,10 +80,12 @@ public class LoginedHttpClient {
 				.setCircularRedirectsAllowed(false)
 				.setRelativeRedirectsAllowed(false)
 				.setRedirectsEnabled(false)
+				.setSocketTimeout(10000)
 				.build();
 		
 		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
-//		redirectStrategy.
+		
+		HttpHost proxy = new HttpHost("113.160.22.38", 8080);
 		
 		httpClient = HttpClients
 				.custom()
@@ -84,6 +93,7 @@ public class LoginedHttpClient {
 				.setRedirectStrategy(redirectStrategy)
 				.setDefaultCookieSpecRegistry(registry)
 				.setDefaultCookieStore(cookieStore)
+//				.setProxy(proxy)
 				.build();
 	}
 	
@@ -105,6 +115,14 @@ public class LoginedHttpClient {
 					 */
 				}
 			};
+	}
+	
+	private RequestConfig getAllowRedirectReqConf(){
+		RequestConfig requestConfig = 
+				RequestConfig.custom()
+				.setSocketTimeout(10000)
+				.build();
+		return requestConfig;
 	}
 	
 	private static String getContent(HttpResponse httpResponse)throws IOException {
@@ -140,25 +158,41 @@ public class LoginedHttpClient {
 		return get(url, null);
 	}
 	
-	public String get(String url, Map<String, String> headers){
+	public String get(String url, Map<String, String> headers, boolean allowRedirect){
 		
 		String ret = null;
 		try{
 			
-			ret = doGet(url, headers);
+			ret = doGet(url, headers, allowRedirect);
 			
 		}catch(IOException e) {
 			LOG.error("Remote request error: {}", e);
 		}
 		return ret;
+		
 	}
 	
-	private String doGet(String url, Map<String, String> headers) throws IOException{
+	public String get(String url, Map<String, String> headers){
+		
+		return get(url, headers, false);
+		
+	}
+	
+	private String doGet(String url, Map<String, String> headers, boolean allowRedirect) throws IOException{
 		
 		String content = "";
 		CloseableHttpResponse response = null;
 		HttpGet httpGet = new HttpGet(url);
-//		System.out.println(httpGet.getConfig().isCircularRedirectsAllowed());
+		
+		if(allowRedirect){
+			httpGet.setConfig(getAllowRedirectReqConf());
+		}
+		
+		/**
+		 *  increment total request count
+		 */
+		requestCount.incrementAndGet();
+		
 		try {
 			
 			if(headers != null){
@@ -219,6 +253,11 @@ public class LoginedHttpClient {
 	
 	private String doPost(String url, Map<String, Object> params, Map<String, String> headers)
 			throws IOException {
+		
+		/**
+		 * 
+		 */
+		requestCount.incrementAndGet();
 		
 		String content = "";
 		

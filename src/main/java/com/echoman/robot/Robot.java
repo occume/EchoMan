@@ -3,14 +3,14 @@ package com.echoman.robot;
 import java.util.Map;
 
 import com.echoman.model.Response;
-import com.echoman.robot.baidu.model.UserInfo;
+import com.echoman.model.RobotBean;
 import com.echoman.util.LoginedHttpClient;
 
 public interface Robot {
 	
 	public Response execute(Map<String, String[]> map);
 	
-	public UserInfo getUserInfo();
+	public RobotBean getRobotBean();
 	
 	public String getName();
 	

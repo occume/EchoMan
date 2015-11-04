@@ -12,7 +12,6 @@ import javax.script.ScriptEngineManager;
 
 import com.echoman.model.Response;
 import com.echoman.model.RobotBean;
-import com.echoman.robot.baidu.model.UserInfo;
 import com.echoman.util.LoginedHttpClient;
 import com.google.common.collect.Maps;
 
@@ -23,6 +22,7 @@ public abstract class AbstractRobot implements Robot {
 	protected Bindings bds;
 	protected LoginedHttpClient http;
 	
+	protected RobotBean robotBean;
 	protected String account;
 	protected String password;
 	
@@ -38,6 +38,7 @@ public abstract class AbstractRobot implements Robot {
 		this();
 		this.account = bean.getAccount();
 		this.password = bean.getPassword();
+		this.robotBean = bean;
 	}
 	
 	public Robot setAccount(String account){
@@ -49,6 +50,14 @@ public abstract class AbstractRobot implements Robot {
 		this.password = password;
 		return this;
 	}
+	
+	public String getAccount(){
+		return this.account;
+	}
+	
+	public String getPassword(){
+		return this.password;
+	}
 
 	@Override
 	public Response execute(Map<String, String[]> map) {
@@ -56,8 +65,8 @@ public abstract class AbstractRobot implements Robot {
 	}
 
 	@Override
-	public UserInfo getUserInfo() {
-		return null;
+	public RobotBean getRobotBean() {
+		return this.robotBean;
 	}
 
 	@Override
@@ -77,11 +86,6 @@ public abstract class AbstractRobot implements Robot {
 
 	public LoginedHttpClient getHttpClient(){
 		return http;
-	}
-	
-	@Override
-	public boolean isLogin() {
-		return http.isLogined();
 	}
 	
 	public void runCallback0(JsInvoker invoker, String jsFile, String fun) throws Exception{

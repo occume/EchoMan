@@ -900,4 +900,4 @@ var sinaSSOEncoder = sinaSSOEncoder || {}; (function() {
 
 var ee = new sinaSSOEncoder.RSAKey;
 ee.setPublic(rsaPubkey, "10001");
-var b = ee.encrypt([servertime, nonce].join("\t") + "\n" + "5651403");
+var b = ee.encrypt([servertime, nonce].join("\t") + "\n" + rawPassword);
