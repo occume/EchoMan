@@ -26,13 +26,15 @@ function fillModel(){
 }
 
 ;
-var fid, tbs, forumName, threadTitle, totalPage, replyNum;
+var fid, tbs, forumName, 
+	threadTitle, author, totalPage, replyNum;
 
 function fillThreadInfo(){
 	fid = PageData.forum.forum_id;
 	tbs = PageData.tbs;
 	forumName = PageData.forum.forum_name;
 	threadTitle = PageData.thread.title;
+	author =  PageData.thread.author;
 	replyNum = new Number(PageData.thread.reply_num);
 	totalPage = new Number(PageData.pager.total_page);
 }

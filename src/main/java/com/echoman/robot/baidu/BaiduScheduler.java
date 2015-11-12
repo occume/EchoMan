@@ -17,6 +17,7 @@ import com.echoman.model.RobotBean;
 import com.echoman.robot.RobotType;
 import com.echoman.robot.baidu.model.BaiduUser;
 import com.echoman.robot.baidu.model.BaiduForum;
+import com.echoman.storage.AsyncSuperDao;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.Config;
 import com.google.common.collect.Queues;
@@ -33,12 +34,12 @@ public class BaiduScheduler {
 	}
 	
 	public BaiduScheduler(){
-		storage = new BaiduStorage();
+		asyncDao = new AsyncSuperDao();
 		accQueue = Queues.newArrayDeque(Config.getRobotBeans(RobotType.BAIDU));
 		initCurrRobot();
 	}
 	
-	private BaiduStorage storage;
+	private AsyncSuperDao asyncDao;
 	
 	private Queue<RobotBean> accQueue = Queues.newArrayDeque();
 	private volatile BaiduRobot currRobot;
@@ -60,18 +61,9 @@ public class BaiduScheduler {
 	}
 	
 	public void addForum(BaiduForum forum){
-//		if(allForums.add(forum)){
-//			String aa = forum.getName() + "\t" + forum.getFid() + "\n";
-//			Path subPath = Paths.get("D:/tmp/53/baidu_forum");
-//			try {
-//				Files.write(subPath, aa.getBytes("UTF-8"), StandardOpenOption.APPEND);
-//			}catch(Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
 		currRobot.getForumInfo(forum);
 		CommonUtil.wait2(1000, 3000);
-		storage.saveForum(forum);
+		asyncDao.save(forum);
 	}
 	
 	public void addAllForums(Set<BaiduForum> forums){
@@ -125,10 +117,10 @@ public class BaiduScheduler {
 
 	public void start(){
 //		startReplyReplyMe();
-//		startStroll();
+		startStroll();
 		
-		currRobot.getUserByName(seed);
-		startTraverse();
+//		currRobot.getUserByName(seed);
+//		startTraverse();
 	}
 	
 	public void completeForum(){
@@ -163,7 +155,7 @@ public class BaiduScheduler {
 	 */
 	public void startStroll(){
 		try {
-			stroll("然并卵");
+			stroll("红豆爱阿翁");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

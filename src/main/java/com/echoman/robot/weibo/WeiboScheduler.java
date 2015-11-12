@@ -10,10 +10,11 @@ import org.slf4j.LoggerFactory;
 import com.echoman.model.RobotBean;
 import com.echoman.robot.RobotType;
 import com.echoman.robot.weibo.model.WeiboUser;
-import com.echoman.storage.SuperBufferedDao;
+import com.echoman.storage.AsyncSuperDao;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.Config;
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
 public class WeiboScheduler {
 	
@@ -29,12 +30,14 @@ public class WeiboScheduler {
 	private BlockingQueue<WeiboUser> taskQueue = Queues.newLinkedBlockingQueue();
 	private BlockingQueue<WeiboUser> completeQueue = Queues.newLinkedBlockingQueue();
 	
+	Set<WeiboUser> allUsers = Sets.newHashSet();
+	
 	private String feed;
 	private volatile WeiboRobot currRobot;
-	private SuperBufferedDao bufferedDao;
+	private AsyncSuperDao asyncDao;
 	
 	public WeiboScheduler(){
-		bufferedDao = new SuperBufferedDao();
+		asyncDao = new AsyncSuperDao();
 		accQueue.addAll(Config.getRobotBeans(RobotType.WEIBO));
 		changeCurrRobot();
 	}
@@ -61,7 +64,7 @@ public class WeiboScheduler {
 	}
 	
 	private void checkAndChangeRobot(){
-		if(currRobot.getRequestCount() > 120){
+		if(currRobot.getRequestCount() > 100){
 			LOG.info("Change account before: {}", currRobot.getAccount());
 			changeCurrRobot();
 			LOG.info("Change account after: {}", currRobot.getAccount());
@@ -70,26 +73,11 @@ public class WeiboScheduler {
 	
 	public void addUser(WeiboUser user){
 		
-		if(!completeQueue.contains(user)){
+		if(!(taskQueue.contains(user) || completeQueue.contains(user))){
 			taskQueue.add(user);
 		}
 		
-		bufferedDao.save(user);
-//		
-//		if(!allUsers.contains(user)){
-//			
-//		}
-//		if(allUsers.add(user)){
-//			System.out.println(user.getName() + " " + allUsers.size());
-//			String aa = user.getName() + " " + allUsers.size() + "\n";
-//			Path subPath = Paths.get("D:/tmp/53/weibo_user");
-////			Files.createFile(subPath);
-//			try {
-//				Files.write(subPath, aa.getBytes("UTF-8"), StandardOpenOption.APPEND);
-//			}catch(Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
+		if(allUsers.add(user)) asyncDao.save(user);
 	}
 	
 	public void addAllUser(Set<WeiboUser> users){
@@ -134,8 +122,10 @@ public class WeiboScheduler {
 		 */
 		checkAndChangeRobot();
 		try {
+//			if(completeQueue.contains(""))
 			WeiboUser user = takeUser();
 			completeQueue.add(user);
+			
 			currRobot.getFollows(user.getUid());
 			Thread.sleep(CommonUtil.random(5000, 20000));
 		} catch (Exception e) {

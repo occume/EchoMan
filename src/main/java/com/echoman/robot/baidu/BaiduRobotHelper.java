@@ -29,9 +29,11 @@ import com.echoman.robot.baidu.model.BaiduForum;
 import com.echoman.robot.baidu.model.BaiduUser;
 import com.echoman.robot.baidu.model.PostInfo;
 import com.echoman.robot.baidu.model.ReplyInfo;
+import com.echoman.storage.ResurceBean;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.DocUtil;
 import com.echoman.util.RegexUtil;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class BaiduRobotHelper extends AbstractHelper{
@@ -354,6 +356,7 @@ public class BaiduRobotHelper extends AbstractHelper{
 				getValueOfVar("tbs"), 
 				tid, 
 				getValueOfVar("threadTitle"), 
+				getValueOfVar("author"), 
 				getValueOfVar("totalPage"), 
 				getValueOfVar("replyNum"));
 
@@ -473,18 +476,21 @@ public class BaiduRobotHelper extends AbstractHelper{
 		BaiduDocParser.parseForumInfo(html, forum);
 	}
 
-	public void getPicsOfPost(String tid) {
+	public List<ResurceBean> getPicsOfPost(String tid) {
 		
 		parseLastPostInfo(tid + "?see_lz=1");
-		BaiduDocParser.traversePost(currPostHtml);
+		List<ResurceBean> ret = Lists.newArrayList();
+		String author = lastPostInfo.getAuthor();
+		ret.addAll(BaiduDocParser.parseAllPics(currPostHtml, author));
 		int totalPage = Integer.valueOf(lastPostInfo.getTotalPage());
 		
 		for(int i = 2; i <= totalPage; i++){
 			CommonUtil.wait2(2000, 10000);
 			System.out.println("=====================");
 			parseLastPostInfo(tid + "?see_lz=1&pn=" + i);
-			BaiduDocParser.traversePost(currPostHtml);
+			ret.addAll(BaiduDocParser.parseAllPics(currPostHtml, author));
 		}
+		return ret;
 	}
 	
 	private void printResult(String errCode){

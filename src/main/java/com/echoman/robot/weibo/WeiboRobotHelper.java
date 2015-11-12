@@ -1,5 +1,10 @@
 package com.echoman.robot.weibo;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,6 +20,7 @@ import com.echoman.robot.weibo.model.WeiboUser;
 import com.echoman.util.Constant;
 import com.echoman.util.DocUtil;
 import com.echoman.util.RegexUtil;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 
@@ -67,8 +73,11 @@ public class WeiboRobotHelper extends AbstractHelper {
 		rsakv 		= getValueOfVar("rsakv");
 		
 		LOG.info("Get rsakv: {}", rsakv);
+		LOG.info("Get nonce: {}", nonce);
 	}
-	
+	/**
+	 * 使用代理的时候 注意 异地登录会弹验证码
+	 */
 	public void doLogin(){
 		
 		String url = "http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)";
@@ -78,6 +87,9 @@ public class WeiboRobotHelper extends AbstractHelper {
 
 		String su = BaseEncoding.base64().encode(robot.getAccount().getBytes());
 		String sp = getEncryptedP(robot.getPassword());
+		
+		LOG.info("Get su: {}", su);
+		LOG.info("Get sp: {}", sp);
 		
 		params.put("encoding", 		Constant.Charset.UTF8);
 		params.put("entry", 		"weibo");
@@ -121,7 +133,9 @@ public class WeiboRobotHelper extends AbstractHelper {
 		headers = getGeneralHeaders();
 		headers.put("Host", "passport.weibo.com");
 		headers.put("Referer", "http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)");
-		
+		/**
+		 * NOTE ssoUrl may be null
+		 */
 		String html = http.get(ssoUrl, headers);
 		LOG.debug(html);
 	}
@@ -161,9 +175,9 @@ public class WeiboRobotHelper extends AbstractHelper {
 	
 	/** login end */
 	
-	public Set<WeiboUser> getFollows(String id){
+	public Set<WeiboUser> getFollows(String id, int page){
 
-		String url = "http://weibo.com/p/100505"+ id +"/follow?page=1&from=page_100505&wvr=6&mod=headfollow#place";
+		String url = "http://weibo.com/p/100505"+ id +"/follow?page="+ page +"#Pl_Official_HisRelation__62";
 		
 		Map<String, String> 
 		headers = getGeneralHeaders();
@@ -171,6 +185,15 @@ public class WeiboRobotHelper extends AbstractHelper {
 		headers.put("Referer", "http://weibo.com/u/"+ uniqueid +"/home");
 		
 		String html = http.get(url, headers);
+		System.out.println(url);
+		System.out.println(html);
+		/**
+		 * you yi xie zhang hao bu neng cha kan follows
+		 */
+		if(Strings.isNullOrEmpty(html)){
+			return Collections.emptySet();
+		}
+		
 		String text = DocUtil.getScriptText1(html, "domid\":\"Pl_Official_HisRelation_");
 
 		if(LOG.isDebugEnabled())
@@ -181,7 +204,7 @@ public class WeiboRobotHelper extends AbstractHelper {
 		relationMyfollowHtml = getValueOfVar("relationMyfollowHtml");
 		
 		Set<WeiboUser> follows = WeiboDocParser.parseFollowsById(relationMyfollowHtml);
-	
+		relationMyfollowHtml = "";
 		return follows;
 	}
 	
@@ -210,17 +233,29 @@ public class WeiboRobotHelper extends AbstractHelper {
 		return "com/echoman/robot/weibo/";
 	}
 
-	public static void main(String...strings){
-		String text = "try{sinaSSOController.setCrossDomainUrlList({\"retcode\":32650,\"arrURL\":"
-				+ "[\"http://crosdom.weicaifu.com/sso/crosdom?action=login&savestate=1477813101"
-				+ "http://passport.97973.com/sso/crossdomain?action=login&savestate=1477813101"
-				+ "http://passport.weibo.cn/sso/crossdomain?action=login&savestate=1"
-				+ "]});}catch(e){}try{sinaSSOController.crossDomainAction('login',function(){location."
-				+ "replace('http://passport.weibo.com/wbsso/login?ssosavestate="
-				+ "1477813101&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3D"
-				+ "parent.sinaSSOController.feedBackUrlCallBack&"
-				+ "ticket=ST-MTczMDgxMTM3MA==-1446277101-gz-76808654F087F726EE4374D13FFC4F11&retcode=0');});}catch(e){}";
-		String retcode = RegexUtil.getGroup1(text, "retcode\":(\\d+)");
-		System.out.println(retcode);
+	public static void main(String...strings) throws IOException{
+//		String text = "try{sinaSSOController.setCrossDomainUrlList({\"retcode\":32650,\"arrURL\":"
+//				+ "[\"http://crosdom.weicaifu.com/sso/crosdom?action=login&savestate=1477813101"
+//				+ "http://passport.97973.com/sso/crossdomain?action=login&savestate=1477813101"
+//				+ "http://passport.weibo.cn/sso/crossdomain?action=login&savestate=1"
+//				+ "]});}catch(e){}try{sinaSSOController.crossDomainAction('login',function(){location."
+//				+ "replace('http://passport.weibo.com/wbsso/login?ssosavestate="
+//				+ "1477813101&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3D"
+//				+ "parent.sinaSSOController.feedBackUrlCallBack&"
+//				+ "ticket=ST-MTczMDgxMTM3MA==-1446277101-gz-76808654F087F726EE4374D13FFC4F11&retcode=0');});}catch(e){}";
+//		String retcode = RegexUtil.getGroup1(text, "retcode\":(\\d+)");
+//		System.out.println(retcode);
+//		Files.readAllLines(Paths.get("D:/tmp/weibo/page1.txt"), Charset.forName("UTF-8"));
+		WeiboRobotHelper helper = new WeiboRobotHelper(null);
+		byte[] b1 = Files.readAllBytes(Paths.get("D:/tmp/weibo/page2.txt"));
+		String html = new String(b1, "UTF-8");
+		String text = DocUtil.getScriptText1(html, "domid\":\"Pl_Official_HisRelation_");
+		
+		helper.loadAndRunFunction("function", text);
+		String html1 = helper.getValueOfVar("relationMyfollowHtml");
+	
+		Set<WeiboUser> follows = WeiboDocParser.parseFollowsById(html1);
+		System.out.println(follows);
 	}
+
 }

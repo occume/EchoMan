@@ -32,6 +32,8 @@ import com.echoman.robot.baidu.model.BaiduUser;
 import com.echoman.robot.baidu.model.BaiduForum;
 import com.echoman.robot.baidu.model.PostInfo;
 import com.echoman.robot.baidu.model.ReplyInfo;
+import com.echoman.storage.ResourceStore;
+import com.echoman.storage.ResurceBean;
 import com.echoman.util.CommonUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -153,9 +155,11 @@ public class BaiduRobot extends AbstractRobot{
 
 	}
 	
-	public void getPicsOfPost(){
+	public void getPicsOfPost(String tid){
 		
-		helper.getPicsOfPost("3086699379");
+//		helper.getPicsOfPost("4146113337");
+		List<ResurceBean> allPics = helper.getPicsOfPost(tid);
+		ResourceStore.instance().add(allPics);
 		
 	}
 	

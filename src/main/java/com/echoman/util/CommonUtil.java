@@ -50,7 +50,7 @@ public class CommonUtil {
 	        return "";
 	    } else if (!name.contains("_")) {
 	        // 不含下划线，仅将首字母小写
-	        return name.substring(0, 1).toLowerCase() + name.substring(1);
+	        return name.substring(0, 1).toUpperCase() + name.substring(1);
 	    }
 	    // 用下划线将原始字符串分割
 	    String camels[] = name.split("_");
@@ -62,7 +62,7 @@ public class CommonUtil {
 	        // 处理真正的驼峰片段
 	        if (result.length() == 0) {
 	            // 第一个驼峰片段，全部字母都小写
-	            result.append(camel.toLowerCase());
+	            result.append(camel.toUpperCase());
 	        } else {
 	            // 其他的驼峰片段，首字母大写
 	            result.append(camel.substring(0, 1).toUpperCase());

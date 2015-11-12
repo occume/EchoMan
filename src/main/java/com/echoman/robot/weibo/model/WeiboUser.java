@@ -2,15 +2,16 @@ package com.echoman.robot.weibo.model;
 
 import com.echoman.storage.Column;
 import com.echoman.storage.Storable;
-import com.echoman.storage.Unique;
+import com.echoman.storage.EqualColumn;
 
 public class WeiboUser implements Storable{
 
 	@Column(type="varchar", length=30)
-	@Unique
+	@EqualColumn
 	private String uid;
 	@Column(type="varchar", length=100)
 	private String name;
+	private String url;
 	
 	public WeiboUser(){}
 	
@@ -23,8 +24,9 @@ public class WeiboUser implements Storable{
 	public Object[] toArray() {
 		return new Object[]{uid, name};
 	}
+	
 	@Override
-	public Object[] uniqueValues() {
+	public Object[] equalValues() {
 		return new Object[]{uid};
 	}
 	
@@ -42,15 +44,23 @@ public class WeiboUser implements Storable{
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((uid == null) ? 0 : uid.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -60,16 +70,17 @@ public class WeiboUser implements Storable{
 		if (getClass() != obj.getClass())
 			return false;
 		WeiboUser other = (WeiboUser) obj;
-		if (name == null) {
-			if (other.name != null)
+		if (uid == null) {
+			if (other.uid != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!uid.equals(other.uid))
 			return false;
 		return true;
 	}
+
 	@Override
 	public String toString() {
-		return "FollowBean [uid=" + uid + ", name=" + name + "]";
+		return "WeiboUser [uid=" + uid + ", name=" + name + ", url=" + url
+				+ "]";
 	}
-	
 }

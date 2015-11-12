@@ -2,21 +2,17 @@ package com.echoman.robot.weibo;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.echoman.model.RobotBean;
 import com.echoman.robot.AbstractRobot;
 import com.echoman.robot.Robot;
 import com.echoman.robot.weibo.model.WeiboUser;
+import com.echoman.util.CommonUtil;
 import com.echoman.util.DocUtil;
 
 public class WeiboRobot extends AbstractRobot {
@@ -78,9 +74,14 @@ public class WeiboRobot extends AbstractRobot {
 	 * @param id
 	 */
 	public void getFollows(String id){
-		
-		Set<WeiboUser> follows = helper.getFollows(id);
-		WeiboScheduler.instance().addAllUser(follows);
+		for(int i = 1; i <= 5; i++){
+			Set<WeiboUser> follows = helper.getFollows(id, i);
+			System.out.println(i + "   ----------------");
+			System.out.println(follows);
+			if(follows.size() == 0) break;
+			CommonUtil.wait2(1000, 3000);
+			WeiboScheduler.instance().addAllUser(follows);
+		}
 		
 	}
 	/**
@@ -92,6 +93,7 @@ public class WeiboRobot extends AbstractRobot {
 		
 		Set<WeiboUser> users = helper.searchUser(keyword, page);
 		WeiboScheduler.instance().addAllUser(users);
+
 	}
 	/**
 	 * search user of 1st page
@@ -99,7 +101,7 @@ public class WeiboRobot extends AbstractRobot {
 	 */
 	public void searchUser(String keyword){
 		
-		helper.searchUser(keyword, 1);
+		searchUser(keyword, 1);
 
 	}
 	

@@ -1,6 +1,7 @@
 package com.echoman.storage;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -13,10 +14,12 @@ import com.echoman.util.CommonUtil;
 import com.echoman.util.DataSourceFactory;
 import com.google.common.collect.Lists;
 
-public class SuperDao implements Storage<Storable> {
+public class SuperDao implements Dao<Storable> {
 	
-	public static final String INSERT_PREFIX = "insert into robot_";
-	public static final String SELECT_PREFIX = "select * from robot_";
+	public String tablePrefix = "robot_";
+	
+	public final String INSERT_PREFIX = "insert into " + tablePrefix;
+	public final String SELECT_PREFIX = "select * from " + tablePrefix;
 	
 	public static ResultSetHandler<Boolean> EXIST_HANDLER =  new ResultSetHandler<Boolean>(){
 		@Override
@@ -54,10 +57,10 @@ public class SuperDao implements Storage<Storable> {
 			params[i] = list.get(i).toArray();
 		}
 		
-		QueryRunner qr = new QueryRunner(DataSourceFactory.getDataSource());
-		return qr.batch(sql, params);
+		return getQueryRunner().batch(sql, params);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean exist(Storable bean) {
 		
@@ -66,15 +69,48 @@ public class SuperDao implements Storage<Storable> {
 		}
 		
 		String sql = assembleExist(bean);
-		System.out.println(sql);
-		QueryRunner qr = new QueryRunner(DataSourceFactory.getDataSource());
+		
 		try {
-			return qr.query(sql, bean.uniqueValues(), EXIST_HANDLER);
+			return getQueryRunner().query(sql, bean.equalValues(), EXIST_HANDLER);
 		} catch (SQLException e) { return false; }
 	}
 	
+	public<T> List<T> getBeans(final String sql, final Class<T> beanClass) throws SQLException{
+		final Field[] fields = beanClass.getDeclaredFields();
+		final List<T> result = Lists.newArrayList();
+		getQueryRunner().query(sql, new ResultSetHandler<T>(){
+			@Override
+			public T handle(ResultSet rs) throws SQLException {
+				while(rs.next()){
+					T bean;
+					try {
+						bean = beanClass.newInstance();
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						continue;
+					}
+					
+					for(Field f: fields){
+						if(f.isAnnotationPresent(NonColumn.class)) continue;
+						String fName = f.getName();
+						String column = CommonUtil.underscoreName(fName);
+						if(!(sql.contains("*") || sql.contains(column))) continue;
+						Object val = rs.getObject(column);
+						if(val == null) continue;
+						try {
+							Method setter = beanClass.getMethod("set" + CommonUtil.camelName(fName), f.getType());
+							setter.invoke(bean, val);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					result.add(bean);
+				}
+				return null;
+			}});
+		return result;
+	}
 	
-
 	@SuppressWarnings("rawtypes")
 	private String assembleExist(Object bean){
 		
@@ -84,7 +120,7 @@ public class SuperDao implements Storage<Storable> {
 		String sql = SELECT_PREFIX + table + " where 1 = 1 ";
 
 		for(Field f: fields){
-			if(f.getAnnotation(Unique.class) == null) continue;
+			if(!f.isAnnotationPresent(EqualColumn.class)) continue;
 			String columnName = CommonUtil.underscoreName(f.getName());
 			sql += (" and `" + columnName + "`" + "= ?");
 		}
@@ -103,7 +139,7 @@ public class SuperDao implements Storage<Storable> {
 		int columnNum = 0;
 
 		for(Field f: fields){
-			if(f.getAnnotation(NonStore.class) != null) continue;
+			if(f.isAnnotationPresent(NonColumn.class)) continue;
 			String columnName = CommonUtil.underscoreName(f.getName());
 			sql += ("`" + columnName + "`" + ",");
 			columnNum++;
@@ -124,20 +160,11 @@ public class SuperDao implements Storage<Storable> {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public void createTable(Storable bean){
-//		CREATE TABLE `robot_baidu_forum` (
-//				  `id` int(11) NOT NULL AUTO_INCREMENT,
-//				  `fid` varchar(20) DEFAULT NULL,
-//				  `name` varchar(100) DEFAULT NULL,
-//				  `member_num` int(11) DEFAULT NULL,
-//				  `post_num` int(11) DEFAULT NULL,
-//				  `slogan` varchar(300) DEFAULT NULL,
-//				  PRIMARY KEY (`id`)
-//				) ENGINE=InnoDB AUTO_INCREMENT=1492 DEFAULT CHARSET=utf8
-		Class klass = bean.getClass();
+	public int createTable(Class klass) throws SQLException{
+
 		Field[] fields = klass.getDeclaredFields();
 		String table = CommonUtil.underscoreName(klass.getSimpleName());
-		String sql = "CREATE TABLE `robot_" + table + "` (" +
+		String sql = "CREATE TABLE IF NOT EXISTS `" + tablePrefix + table + "` (" +
 					"`id` int(11) NOT NULL AUTO_INCREMENT,";
 
 		for(Field f: fields){
@@ -151,15 +178,23 @@ public class SuperDao implements Storage<Storable> {
 		sql += " PRIMARY KEY (`id`)" +
 				") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8";
 		
-		System.out.println(sql);
+		
+		return getQueryRunner().update(sql);
+	}
+	
+	private QueryRunner getQueryRunner(){
+		return new QueryRunner(DataSourceFactory.getDataSource());
 	}
 	
 	public static void main(String...strings) throws SQLException{
-		WeiboUser bean = new WeiboUser();
-		bean.setName("jd");
-		bean.setUid("001");;
+//		WeiboUser bean = new WeiboUser();
+//		bean.setName("jd");
+//		bean.setUid("001");;
 		SuperDao dao = new SuperDao();
 //		dao.createTable(new WeiboUser());
-		dao.save(bean);
+//		dao.save(bean);
+		
+		List<WeiboUser> users = dao.getBeans("select * from robot_weibo_user limit 1", WeiboUser.class);
+		System.out.println(users);
 	}
 }

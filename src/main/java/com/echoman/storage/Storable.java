@@ -4,5 +4,5 @@ public interface Storable {
 
 	public Object[] toArray();
 	
-	public Object[] uniqueValues();
+	public Object[] equalValues();
 }

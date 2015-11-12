@@ -8,6 +8,7 @@ public class PostInfo {
 	private String tbs;
 	private String tid;
 	private String title;
+	private String author;
 	private String totalPage;
 	private String replyNum;
 	private int    currFloor;
@@ -27,12 +28,13 @@ public class PostInfo {
 	}
 
 	public PostInfo(String fid, String forumName, String tbs, String tid,
-			String title, String totalPage, String replyNum) {
+			String title, String author, String totalPage, String replyNum) {
 		this.fid = fid;
 		this.forumName = forumName;
 		this.tbs = tbs;
 		this.tid = tid;
 		this.title = title;
+		this.author = author;
 		this.totalPage = totalPage;
 		this.replyNum = replyNum;
 	}
@@ -115,6 +117,14 @@ public class PostInfo {
 
 	public void setCurrPage(int currPage) {
 		this.currPage = currPage;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.echoman.robot.baidu.model.BaiduForum;
 import com.echoman.robot.baidu.model.BaiduUser;
 import com.echoman.robot.baidu.model.ReplyInfo;
+import com.echoman.storage.ResurceBean;
 import com.echoman.util.RegexUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -173,14 +174,27 @@ public class BaiduDocParser {
 		String intString = input.replaceAll(",",  "");
 		return Integer.valueOf(intString);
 	}
-
-	public static void traversePost(String html) {
-		Document doc = Jsoup.parse(html);
-		Elements elems = doc.select("#j_p_postlist .l_post .d_post_content_main cc .d_post_content");
+	
+	public static List<ResurceBean> parseAllPics(String html, String author){
+		String selector = "#j_p_postlist .l_post .d_post_content_main cc .d_post_content img";
+		Elements elems = traversePost(html, selector);
+		List<ResurceBean> list = Lists.newArrayList();
 		for(Element elem: elems){
-			System.out.println("--------------------------------------");
-			System.out.println(elem.html());
+			String src = elem.attr("src");
+			if(src.contains("static.tieba.baidu.com")) continue;
+			ResurceBean bean = ResurceBean.baidu();
+			bean.setUrl(src);
+			bean.setUserName(author);
+			LOG.info(bean.toString());
+			list.add(bean);
 		}
+		return list;
+	}
+
+	public static Elements traversePost(String html, String selector) {
+		Document doc = Jsoup.parse(html);
+		Elements elems = doc.select(selector);
+		return elems;
 	}
 	public static void main(String...strings){
 

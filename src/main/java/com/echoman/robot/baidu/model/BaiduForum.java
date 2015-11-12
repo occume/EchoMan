@@ -1,15 +1,15 @@
 package com.echoman.robot.baidu.model;
 
-import com.echoman.storage.NonStore;
+import com.echoman.storage.NonColumn;
 import com.echoman.storage.Storable;
-import com.echoman.storage.Unique;
+import com.echoman.storage.EqualColumn;
 
 public class BaiduForum implements Storable{
 
-	@Unique
+	@EqualColumn
 	private String fid;
 	private String name;
-	@NonStore
+	@NonColumn
 	private String level;
 	private String slogan;
 	
@@ -33,7 +33,7 @@ public class BaiduForum implements Storable{
 	}
 
 	@Override
-	public Object[] uniqueValues() {
+	public Object[] equalValues() {
 		return new Object[]{fid};
 	}
 	

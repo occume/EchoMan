@@ -49,13 +49,21 @@ public class RegexUtil {
 	 * @return
 	 */
 	public static String[] getGroup12(String input, String regex) {
-		
 		MatchResult result = getMatchResult(input, regex);
 		String[] ret = new String[2];
 		if(result != null){
 			ret[0] = result.group(1);
 			ret[1] = result.group(2);
 		}
+		return ret;
+	}
+	
+	public static String getFileNameOfURL(String url){
+		String ret = "";
+		Pattern p = Pattern.compile("(?<=/)(([^/])+$)");
+		Matcher m = p.matcher(url);
+		if(m.find()) ret = m.group(1);
+		
 		return ret;
 	}
 }
