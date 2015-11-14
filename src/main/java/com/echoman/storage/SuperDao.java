@@ -2,6 +2,7 @@ package com.echoman.storage;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
+import com.echoman.robot.weibo.model.FansKeywords;
 import com.echoman.robot.weibo.model.WeiboUser;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.DataSourceFactory;
@@ -111,6 +113,68 @@ public class SuperDao implements Dao<Storable> {
 		return result;
 	}
 	
+	public<T> T getBean(final String sql, final Class<T> beanClass) throws SQLException{
+		
+		return getQueryRunner().query(sql, new ResultSetHandler<T>(){
+			@Override
+			public T handle(ResultSet rs) throws SQLException {
+				T result = null;
+				if(rs.next()) result = fillBean(rs, sql, beanClass);
+				return result;
+			}
+		});
+	}
+	
+	private <T> T fillBean(ResultSet rs, String sql, final Class<T> beanClass) throws SQLException{
+		final Field[] fields = beanClass.getDeclaredFields();
+		
+		T bean = null;
+		try {
+			bean = beanClass.newInstance();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			return bean;
+		}
+		
+		for(Field f: fields){
+			if(f.isAnnotationPresent(NonColumn.class)) continue;
+			String fName = f.getName();
+			String column = CommonUtil.underscoreName(fName);
+			if(!(sql.contains("*") || sql.contains(column))) continue;
+			Object val = rs.getObject(column);
+			if(val == null) continue;
+			try {
+				Method setter = beanClass.getMethod("set" + CommonUtil.camelName(fName), f.getType());
+				setter.invoke(bean, val);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return bean;
+	}
+	
+	public<T> void update(final String updateSql, Object[] params){
+		Connection conn = null;
+		
+		try {
+			conn = DataSourceFactory.getDataSource().getConnection();
+			conn.setAutoCommit(false);
+			
+			getQueryRunner().update(conn, updateSql, params);
+			
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			if(conn != null)
+				try {
+					conn.rollback();
+				} catch (SQLException e1) {
+				}
+		}
+	}
+	
+	
 	@SuppressWarnings("rawtypes")
 	private String assembleExist(Object bean){
 		
@@ -194,7 +258,13 @@ public class SuperDao implements Dao<Storable> {
 //		dao.createTable(new WeiboUser());
 //		dao.save(bean);
 		
-		List<WeiboUser> users = dao.getBeans("select * from robot_weibo_user limit 1", WeiboUser.class);
-		System.out.println(users);
+//		List<FansKeywords> users = dao.getBeans("select * from jtyd_fans_keywords limit 2", FansKeywords.class);
+//		System.out.println(users);
+		String getSql = "select * from jtyd_fans_keywords limit 2";
+		FansKeywords kw = dao.getBean(getSql, FansKeywords.class);
+		
+		String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
+		dao.update(updateSql, new Object[]{kw.getId()});
+//		System.out.println(kw);
 	}
 }

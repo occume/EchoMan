@@ -184,18 +184,46 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 //		doChatUser();
 	}
 	
-	public void doSearchUserCN(String keyword, int page){
+	public Set<WeiboUser> doSearchUserCN(String keyword, int page){
 
 		String url = "http://weibo.cn/find/user?keyword="+ keyword +"&suser=2&page=" + page;
-		System.out.println(url);
+		
 		Map<String, String> 
 		headers = getGeneralHeaders();
 		headers.put("Host", "weibo.cn");
 		headers.put("Referer", "http://weibo.cn/find/user");
 		
 		String html = http.get(url, headers);
-		WeiboCNDocParser.parseUserOfSearchCN(html);
+		return WeiboCNDocParser.parseUserOfSearchCN(html);
 	}
+	
+
+	public void doFillUserInfo(WeiboUser user) {
+		
+		String url = "http://weibo.cn/"+ user.getUserId() +"/info";
+		
+		Map<String, String> 
+		headers = getGeneralHeaders();
+		headers.put("Host", "weibo.cn");
+		headers.put("Referer", "http://weibo.cn/u/" + user.getUserId());
+		
+		String html = http.get(url, headers);
+		WeiboCNDocParser.parseUserInfo(html, user);
+	}
+	
+	public void doFillUserInfo1(WeiboUser user) {
+		
+		String url = "http://weibo.cn" + user.getUrl();
+		
+		Map<String, String> 
+		headers = getGeneralHeaders();
+		headers.put("Host", "weibo.cn");
+		headers.put("Referer", "http://weibo.cn/find/user");
+		
+		String html = http.get(url, headers);
+		WeiboCNDocParser.parseUserInfo1(html, user);
+	}
+
 	
 	private void prepaerChat(){
 		String url = "http://weibo.cn/im/chat?uid=1864100610&rl=0&rand=718260";
@@ -255,5 +283,4 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		Set<WeiboUser> follows = WeiboCNDocParser.parseFollowsById(html1);
 		System.out.println(follows);
 	}
-
 }

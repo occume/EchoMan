@@ -11,9 +11,12 @@ public class DataSourceFactory {
         try {
         	
 	        String driver = "org.gjt.mm.mysql.Driver";
-	        String url = "jdbc:mysql://localhost:3306/echoman";
-			String username = "root";
-			String password = "5651403";
+//	        String url = "jdbc:mysql://localhost:3306/echoman";
+//			String username = "root";
+//			String password = "5651403";
+			String url = "jdbc:mysql://rdsy32ua2y32ua2.mysql.rds.aliyuncs.com:3306/rcst7f6k57654t45?useUnicode=false&characterEncoding=UTF-8";
+			String username = "rcst7f6k57654t45";
+			String password = "tb7778479";
 			
 			dataSource = new ComboPooledDataSource();
 			dataSource.setDriverClass(driver);

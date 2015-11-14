@@ -49,8 +49,6 @@ public class WeiboCNScheduler {
 	
 	private void changeCurrRobot(){
 		
-//		WeiboRobot oldRobot = currRobot;
-		
 		RobotBean bean = accQueue.poll();
 		WeiboCNRobot robot = new WeiboCNRobot(bean);
 		robot.login();
@@ -64,7 +62,7 @@ public class WeiboCNScheduler {
 	}
 	
 	private void checkAndChangeRobot(){
-		if(currRobot.getRequestCount() > 100){
+		if(currRobot.getRequestCount() > 200){
 			LOG.info("Change account before: {}", currRobot.getAccount());
 			changeCurrRobot();
 			LOG.info("Change account after: {}", currRobot.getAccount());
@@ -96,14 +94,36 @@ public class WeiboCNScheduler {
 	
 	public void start(){
 		
-		collectIDByTranverse();
-//		collectIDBySearch();
+//		collectIDByTranverse();
+		collectBySearch();
 	}
 	
-	private void collectIDBySearch(){
-		String keyword = "";
-		for(int i = 0; i < 20; i++){
-			currRobot.searchUser(keyword, i);
+	private void collectBySearch(){
+		Thread t1 = new Thread(new SearchUserTask(), "SEARCH-USER-WORKER");
+		Thread t2 = new Thread(new FillUserInfoTask(), "FILL-USER-INFO-WORKER");
+		t1.start();
+		t2.start();
+	}
+	
+	private void doSearchUser(){
+		String keyword = "宝妈";
+		currRobot.searchUser(keyword);
+	}
+	
+	private void doFillUserInfo(){
+		/**
+		 * do not do much work at a time
+		 */
+		checkAndChangeRobot();
+		try {
+//			if(completeQueue.contains(""))
+			WeiboUser user = takeUser();
+			completeQueue.add(user);
+			
+			currRobot.fillUserInfo(user);
+			Thread.sleep(CommonUtil.random(2000, 5000));
+		} catch (Exception e) {
+			LOG.error("");
 		}
 	}
 
@@ -116,7 +136,7 @@ public class WeiboCNScheduler {
 		worker.start();
 	}
 	
-	private void doCollectID(){
+	private void doCollect(){
 		/**
 		 * do not do much work at a time
 		 */
@@ -126,7 +146,7 @@ public class WeiboCNScheduler {
 			WeiboUser user = takeUser();
 			completeQueue.add(user);
 			
-			currRobot.getFollows(user.getUid());
+			currRobot.getFollows(user.getUserId());
 			Thread.sleep(CommonUtil.random(5000, 20000));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -136,7 +156,21 @@ public class WeiboCNScheduler {
 	private class CollectIDTask implements Runnable{
 		@Override
 		public void run() {
-			for(;;) doCollectID();
+			for(;;) doCollect();
+		}
+	}
+	
+	private class SearchUserTask implements Runnable{
+		@Override
+		public void run() {
+			for(;;) doSearchUser();
+		}
+	}
+	
+	private class FillUserInfoTask implements Runnable{
+		@Override
+		public void run() {
+			for(;;) doFillUserInfo();
 		}
 	}
 }

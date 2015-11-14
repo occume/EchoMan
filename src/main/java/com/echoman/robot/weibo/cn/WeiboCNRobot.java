@@ -74,6 +74,7 @@ public class WeiboCNRobot extends AbstractRobot {
 	 * @param id
 	 */
 	public void getFollows(String id){
+		
 		for(int i = 1; i <= 5; i++){
 			Set<WeiboUser> follows = helper.getFollows(id, i);
 			System.out.println(i + "   ----------------");
@@ -91,8 +92,9 @@ public class WeiboCNRobot extends AbstractRobot {
 	 */
 	public void searchUser(String keyword, int page){
 		
-//		WeiboScheduler.instance().addAllUser(users);
-		helper.doSearchUserCN(keyword, page);
+		Set<WeiboUser> users = helper.doSearchUserCN(keyword, page);
+		WeiboCNScheduler.instance().addAllUser(users);
+		
 	}
 	/**
 	 * search user of 1st page
@@ -100,8 +102,21 @@ public class WeiboCNRobot extends AbstractRobot {
 	 */
 	public void searchUser(String keyword){
 		
-		searchUser(keyword, 1);
+		for(int i = 1; i <= 50; i++){
+			Set<WeiboUser> users = helper.doSearchUserCN(keyword, i);
+			if(users.size() == 0) break;
+			CommonUtil.wait2(1000, 3000);
+			WeiboCNScheduler.instance().addAllUser(users);
+		}
 
+	}
+	
+	public void fillUserInfo(WeiboUser user){
+		
+		helper.doFillUserInfo(user);
+		CommonUtil.wait2(1000, 2000);
+		helper.doFillUserInfo1(user);
+		
 	}
 	
 	public void loginCN(){
@@ -114,16 +129,6 @@ public class WeiboCNRobot extends AbstractRobot {
 		
 		helper.doChatUser();
 		
-	}
-	
-	public void getUserInfo(){
-		String url = "http://weibo.com/p/1005053057179881/info?mod=pedit_more";
-		Map<String, String> headers = getGeneralHeaders();
-		
-		headers.put("Host", "weibo.com");
-		headers.put("Referer", "http://weibo.com/u/"+ uniqueid +"/home");
-		
-		String html = http.get(url, headers);
 	}
 	
 	public Map<String, String> getGeneralHeaders(){

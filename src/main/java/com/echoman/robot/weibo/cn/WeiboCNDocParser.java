@@ -92,17 +92,94 @@ public class WeiboCNDocParser {
 			Elements a = elem.select("a");
 			Element a0 = a.get(0);
 			String name = a0.html();
-//			String url = a.get(1).attr("href");
 			String url = a0.attr("href");
-			WeiboUser user = new WeiboUser();
-			user.setName(name);
+			
+			Element a1 = a.get(1);
+			String attention = a1.attr("href");
+			String id = RegexUtil.getGroup1(attention, "uid=(\\d+)");
+			
+			WeiboUser user = new WeiboUser(id, name);
 			user.setUrl(url);
-			System.out.println(user);
 			beans.add(user);
 		}
 		
 		return beans;
 	}
 	
-//	public static 
+	public static void parseUserInfo(String html, WeiboUser user){
+		Document doc = Jsoup.parse(html);
+		
+		Elements elems = doc.select("div");
+		Element baseInfo = elems.get(4);
+		
+		String baseText = baseInfo.html();
+//		System.out.println(baseText);
+		String[] items = baseText.split("<br />");
+		for(String item: items){
+			String[] terms = RegexUtil.getGroup12(item.replaceAll("\n", ""), "(.{2}):(.*)");
+//			String label = terms[0];
+			String value = terms[1];
+			if(item.contains("性别")){
+				user.setGender(value);
+			}
+			if(item.contains("地区")){
+				user.setBaseAddress(value);
+			}
+			if(item.contains("简介")){
+				user.setIntro(value);
+			}
+			if(item.contains("标签")){
+				String tagString = "";
+				String[] tags = value.split("&nbsp;");
+				for(String tg: tags){
+					String tagName = RegexUtil.getGroup1(tg, "<a[^>]*>(.*)</a>");
+					if(!tagName.contains("更多")){
+						tagString += (tagName + ",");
+					}
+				}
+				user.setTag(tagString);
+			}
+		}
+		
+	}
+	
+	public static void parseUserInfo1(String html, WeiboUser user){
+		Document doc = Jsoup.parse(html);
+		
+		Elements elems = doc.select(".u .tip2");
+		Element elem = elems.get(0);
+		
+		String infoText = elem.html();
+		String[] terms = infoText.split("&nbsp;");
+		
+		for(String term: terms){
+			String value = RegexUtil.getGroup1(term, "\\[(\\d+)\\]");
+			if(term.contains("微博")){
+				user.setSendCount(Integer.valueOf(value));
+			}
+			if(term.contains("关注")){
+				user.setAttentions(Integer.valueOf(value));
+			}
+			if(term.contains("粉丝")){
+				user.setFans(Integer.valueOf(value));
+			}
+		}
+		System.out.println(user);
+	}
+	
+	public static void main(String...strings){
+		String html = "<span class=\"tc\">微博[23915]</span>&nbsp;" +
+"<a href=\"/2104483152/follow\">关注[1429]</a>&nbsp;" +
+"<a href=\"/2104483152/fans\">粉丝[12109]</a>&nbsp;" +
+"<a href=\"/attgroup/opening?uid=2104483152\">分组[2]</a>&nbsp;" +
+"<a href=\"/at/weibo?uid=2104483152\">@他的</a>;";
+		
+		String[] tags = html.split("&nbsp;");
+		
+		for(String lb: tags){
+			String tagName = RegexUtil.getGroup1(lb, "\\[(\\d+)\\]");
+			System.out.println(tagName);
+		}
+		
+	}
 }
