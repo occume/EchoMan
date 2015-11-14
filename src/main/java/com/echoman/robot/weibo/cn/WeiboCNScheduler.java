@@ -1,5 +1,6 @@
 package com.echoman.robot.weibo.cn;
 
+import java.sql.SQLException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.echoman.model.RobotBean;
 import com.echoman.robot.RobotType;
+import com.echoman.robot.weibo.model.FansKeywords;
 import com.echoman.robot.weibo.model.WeiboUser;
 import com.echoman.storage.AsyncSuperDao;
 import com.echoman.util.CommonUtil;
@@ -107,8 +109,27 @@ public class WeiboCNScheduler {
 	}
 	
 	private void doSearchUser(){
-		String keyword = "宝妈";
-		currRobot.searchUser(keyword);
+		
+		String getSql = "select * from jtyd_fans_keywords where del_flag = 0 limit 1";
+		FansKeywords kw = null;
+		try {
+			
+			kw = asyncDao.superDao().getBean(getSql, FansKeywords.class);
+
+			if(kw == null) return;
+			
+			String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
+			asyncDao.superDao().update(updateSql, new Object[]{kw.getId()});
+			System.out.println(kw);
+			
+//			String keyword = "宝妈";
+			currRobot.searchUser(kw.getKeywords());
+			
+			Thread.sleep(CommonUtil.random(1000, 2000));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	private void doFillAndSaveUser(){

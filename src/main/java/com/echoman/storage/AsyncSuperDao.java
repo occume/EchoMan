@@ -48,6 +48,11 @@ public class AsyncSuperDao{
 			LOG.error("Create tables fail, ", e);
 		}
 	}
+	
+	public SuperDao superDao(){
+		return dao;
+	}
+	
 	/**
 	 * 
 	 */

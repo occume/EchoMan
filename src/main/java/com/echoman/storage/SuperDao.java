@@ -272,13 +272,13 @@ public class SuperDao implements Dao<Storable> {
 		
 //		List<FansKeywords> users = dao.getBeans("select * from jtyd_fans_keywords limit 2", FansKeywords.class);
 //		System.out.println(users);
-		String getSql = "select * from jtyd_fans_keywords limit 2";
+		String getSql = "select * from jtyd_fans_keywords where del_flag = 0 limit 1";
 		FansKeywords kw = dao.getBean(getSql, FansKeywords.class);
 		
-		String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
-		dao.update(updateSql, new Object[]{kw.getId()});
-//		System.out.println(kw);
+//		String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
+//		dao.update(updateSql, new Object[]{kw.getId()});
+		System.out.println(kw);
 		
-		dao.save(null);
+//		dao.save(null);
 	}
 }
