@@ -26,6 +26,8 @@ public class WeiboCNScheduler {
 		return scheduler;
 	}
 	
+	private static final String TABLE_PREFIX = "jtyd_";
+	
 	Queue<RobotBean> accQueue = Queues.newArrayDeque();
 	private BlockingQueue<WeiboUser> taskQueue = Queues.newLinkedBlockingQueue();
 	private BlockingQueue<WeiboUser> completeQueue = Queues.newLinkedBlockingQueue();
@@ -37,7 +39,7 @@ public class WeiboCNScheduler {
 	private AsyncSuperDao asyncDao;
 	
 	public WeiboCNScheduler(){
-		asyncDao = new AsyncSuperDao();
+		asyncDao = new AsyncSuperDao(TABLE_PREFIX);
 		accQueue.addAll(Config.getRobotBeans(RobotType.WEIBO));
 		changeCurrRobot();
 	}
@@ -75,7 +77,6 @@ public class WeiboCNScheduler {
 			taskQueue.add(user);
 		}
 		
-		if(allUsers.add(user)) asyncDao.save(user);
 	}
 	
 	public void addAllUser(Set<WeiboUser> users){
@@ -100,7 +101,7 @@ public class WeiboCNScheduler {
 	
 	private void collectBySearch(){
 		Thread t1 = new Thread(new SearchUserTask(), "SEARCH-USER-WORKER");
-		Thread t2 = new Thread(new FillUserInfoTask(), "FILL-USER-INFO-WORKER");
+		Thread t2 = new Thread(new FillANDSaveUserTask(), "FILL-USER-INFO-WORKER");
 		t1.start();
 		t2.start();
 	}
@@ -110,18 +111,22 @@ public class WeiboCNScheduler {
 		currRobot.searchUser(keyword);
 	}
 	
-	private void doFillUserInfo(){
+	private void doFillAndSaveUser(){
 		/**
 		 * do not do much work at a time
 		 */
 		checkAndChangeRobot();
+		
 		try {
-//			if(completeQueue.contains(""))
+
 			WeiboUser user = takeUser();
 			completeQueue.add(user);
 			
 			currRobot.fillUserInfo(user);
-			Thread.sleep(CommonUtil.random(2000, 5000));
+			asyncDao.save(user);
+			
+			Thread.sleep(CommonUtil.random(1000, 2000));
+			
 		} catch (Exception e) {
 			LOG.error("");
 		}
@@ -167,10 +172,10 @@ public class WeiboCNScheduler {
 		}
 	}
 	
-	private class FillUserInfoTask implements Runnable{
+	private class FillANDSaveUserTask implements Runnable{
 		@Override
 		public void run() {
-			for(;;) doFillUserInfo();
+			for(;;) doFillAndSaveUser();
 		}
 	}
 }

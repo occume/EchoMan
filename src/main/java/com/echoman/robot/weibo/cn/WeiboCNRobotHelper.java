@@ -146,8 +146,8 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		String vk = params.get("vk").toString();
 		String passSuffix = vk.substring(0, 4);
 		
-		params.put("mobile", "13585908235");
-		params.put(("password_" + passSuffix), "5651403");
+		params.put("mobile", robot.getAccount().replace("%40", "@"));
+		params.put(("password_" + passSuffix), robot.getPassword());
 		System.out.println(params);
 		
 		String html = http.post(url, params, headers);
@@ -194,7 +194,7 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		headers.put("Referer", "http://weibo.cn/find/user");
 		
 		String html = http.get(url, headers);
-		return WeiboCNDocParser.parseUserOfSearchCN(html);
+		return WeiboCNDocParser.parseUserOfSearchCN(html, keyword);
 	}
 	
 

@@ -1,5 +1,7 @@
 package com.echoman.robot.weibo.cn;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.Set;
 
@@ -81,7 +83,7 @@ public class WeiboCNDocParser {
 		return "checkbox".equalsIgnoreCase(type) || "submit".equalsIgnoreCase(type);
 	}
 
-	public static Set<WeiboUser> parseUserOfSearchCN(String html) {
+	public static Set<WeiboUser> parseUserOfSearchCN(String html, String keyword) {
 		
 		Document doc = Jsoup.parse(html);
 		Elements elems = doc.select("table tbody tr td:nth-child(2)");
@@ -100,6 +102,7 @@ public class WeiboCNDocParser {
 			
 			WeiboUser user = new WeiboUser(id, name);
 			user.setUrl(url);
+			user.setGrabTag(keyword);
 			beans.add(user);
 		}
 		
@@ -113,7 +116,6 @@ public class WeiboCNDocParser {
 		Element baseInfo = elems.get(4);
 		
 		String baseText = baseInfo.html();
-//		System.out.println(baseText);
 		String[] items = baseText.split("<br />");
 		for(String item: items){
 			String[] terms = RegexUtil.getGroup12(item.replaceAll("\n", ""), "(.{2}):(.*)");
@@ -128,6 +130,18 @@ public class WeiboCNDocParser {
 			if(item.contains("简介")){
 				user.setIntro(value);
 			}
+			if(item.contains("生日")){
+				
+				if(value.length() == 10){
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					try {
+						user.setBirthday(sdf.parse(value));
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+				
+			}
 			if(item.contains("标签")){
 				String tagString = "";
 				String[] tags = value.split("&nbsp;");
@@ -140,7 +154,23 @@ public class WeiboCNDocParser {
 				user.setTag(tagString);
 			}
 		}
+		/**
+		 * 
+		 */
+		Element studyInfo = elems.get(6);
+		String studyText = studyInfo.html();
+		String[] items1 = studyText.split("<br />");
+		user.setSchool(items1[0].substring(1));
+		System.out.println(user);
+		/**
+		 * 
+		 */
+		Element jobInfo = elems.get(6);
+		String jobText = jobInfo.html();
+		String[] items2 = jobText.split("<br />");
+		user.setCompany(items2[0].substring(1));
 		
+		System.out.println(user);
 	}
 	
 	public static void parseUserInfo1(String html, WeiboUser user){
@@ -164,7 +194,7 @@ public class WeiboCNDocParser {
 				user.setFans(Integer.valueOf(value));
 			}
 		}
-		System.out.println(user);
+//		System.out.println(user);
 	}
 	
 	public static void main(String...strings){

@@ -35,7 +35,7 @@ public class WeiboUser implements Storable{
 	private int		sendCount;
 	private String	grabTag;
 	private String 	classTag;
-	private Date	fetchedTime;
+	private Date	fetchedTime = new Date();
 	
 	public WeiboUser(){}
 	
@@ -46,7 +46,8 @@ public class WeiboUser implements Storable{
 	
 	@Override
 	public Object[] toArray() {
-		return new Object[]{userId, userName};
+		return new Object[]{userId, userName,url,baseAddress,gender,sex,emotion,birthday,blood,constellation,intro,blog,msn,qq,school,company,companyAddr,
+				companyJob,tag,attentions,fans,sendCount,grabTag,classTag,fetchedTime};
 	}
 	
 	@Override

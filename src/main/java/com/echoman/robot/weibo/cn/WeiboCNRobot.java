@@ -116,7 +116,7 @@ public class WeiboCNRobot extends AbstractRobot {
 		helper.doFillUserInfo(user);
 		CommonUtil.wait2(1000, 2000);
 		helper.doFillUserInfo1(user);
-		
+		LOG.info(user.toString());
 	}
 	
 	public void loginCN(){

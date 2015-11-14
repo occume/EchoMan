@@ -26,9 +26,10 @@ public class AsyncSuperDao{
 	private BlockingQueue<Storable> taskQueue;
 	private int batchSize = 2;
 	private boolean autoCreateTable = true;
-	private SuperDao dao = new SuperDao();
+	private SuperDao dao;
 	
-	public AsyncSuperDao(){
+	public AsyncSuperDao(String tablePrefix){
+		dao = new SuperDao(tablePrefix);
 		taskQueue = Queues.newLinkedBlockingQueue();
 		if(autoCreateTable) createTables();
 		startTasks();
@@ -160,6 +161,6 @@ public class AsyncSuperDao{
 	};
 	
 	public static void main(String...strings) throws SQLException{
-		AsyncSuperDao dao = new AsyncSuperDao();
+		AsyncSuperDao dao = new AsyncSuperDao("jtyd_");
 	}
 }

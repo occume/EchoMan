@@ -17,6 +17,10 @@ public class WeixinRobotHelper extends AbstractHelper {
 		System.out.println(html);
 	}
 	
+	public void getArticle(){
+		
+	}
+	
 	public Map<String, String> getGeneralHeaders(){
 		
 		Map<String, String> hds = super.getGeneralHeaders();

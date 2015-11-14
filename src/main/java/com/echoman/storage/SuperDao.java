@@ -20,8 +20,8 @@ public class SuperDao implements Dao<Storable> {
 	
 	public String tablePrefix = "robot_";
 	
-	public final String INSERT_PREFIX = "insert into " + tablePrefix;
-	public final String SELECT_PREFIX = "select * from " + tablePrefix;
+	public String INSERT_PREFIX;
+	public String SELECT_PREFIX;
 	
 	public static ResultSetHandler<Boolean> EXIST_HANDLER =  new ResultSetHandler<Boolean>(){
 		@Override
@@ -29,6 +29,18 @@ public class SuperDao implements Dao<Storable> {
 			return rs.next();
 		}
 	};
+	
+	public SuperDao(){}
+	
+	public SuperDao(String tabelPrefix){
+		setTablePrefix(tabelPrefix);
+		INSERT_PREFIX = "insert into " + tablePrefix;
+		SELECT_PREFIX = "select * from " + tablePrefix;
+	}
+	
+	public void setTablePrefix(String tabelPrefix){
+		this.tablePrefix = tabelPrefix;
+	}
 
 	@Override
 	public int save(Storable bean) throws SQLException {
@@ -266,5 +278,7 @@ public class SuperDao implements Dao<Storable> {
 		String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
 		dao.update(updateSql, new Object[]{kw.getId()});
 //		System.out.println(kw);
+		
+		dao.save(null);
 	}
 }
