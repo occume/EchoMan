@@ -146,7 +146,7 @@ public class WeiboCNScheduler {
 			
 			currRobot.fillUserInfo(user);
 			System.out.println("4>>> " + user);
-//			asyncDao.save(user);
+			asyncDao.save(user);
 			
 			Thread.sleep(CommonUtil.random(1000, 2000));
 			
