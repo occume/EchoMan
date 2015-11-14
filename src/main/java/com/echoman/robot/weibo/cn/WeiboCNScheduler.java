@@ -120,10 +120,12 @@ public class WeiboCNScheduler {
 		try {
 
 			WeiboUser user = takeUser();
+			System.out.println("1>>> " + user);
 			completeQueue.add(user);
 			
 			currRobot.fillUserInfo(user);
-			asyncDao.save(user);
+			System.out.println("4>>> " + user);
+//			asyncDao.save(user);
 			
 			Thread.sleep(CommonUtil.random(1000, 2000));
 			

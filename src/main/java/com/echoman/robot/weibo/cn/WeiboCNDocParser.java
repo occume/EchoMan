@@ -121,6 +121,7 @@ public class WeiboCNDocParser {
 			String[] terms = RegexUtil.getGroup12(item.replaceAll("\n", ""), "(.{2}):(.*)");
 //			String label = terms[0];
 			String value = terms[1];
+//			System.out.println(value);
 			if(item.contains("性别")){
 				user.setGender(value);
 			}
@@ -155,22 +156,22 @@ public class WeiboCNDocParser {
 			}
 		}
 		/**
-		 * 
-		 */
+		 * school
+		 */	
 		Element studyInfo = elems.get(6);
 		String studyText = studyInfo.html();
 		String[] items1 = studyText.split("<br />");
-		user.setSchool(items1[0].substring(1));
-		System.out.println(user);
+		user.setSchool(items1[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
+//		System.out.println(user);
 		/**
-		 * 
+		 * company
 		 */
-		Element jobInfo = elems.get(6);
+		Element jobInfo = elems.get(8);
 		String jobText = jobInfo.html();
 		String[] items2 = jobText.split("<br />");
-		user.setCompany(items2[0].substring(1));
+		user.setCompany(items2[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
 		
-		System.out.println(user);
+//		System.out.println("2>>> " + user);
 	}
 	
 	public static void parseUserInfo1(String html, WeiboUser user){
@@ -194,7 +195,7 @@ public class WeiboCNDocParser {
 				user.setFans(Integer.valueOf(value));
 			}
 		}
-//		System.out.println(user);
+//		System.out.println("3>>> " + user);
 	}
 	
 	public static void main(String...strings){
