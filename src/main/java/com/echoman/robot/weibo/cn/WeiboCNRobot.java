@@ -104,9 +104,18 @@ public class WeiboCNRobot extends AbstractRobot {
 		
 		for(int i = 1; i <= 50; i++){
 			Set<WeiboUser> users = helper.doSearchUserCN(keyword, i);
+			LOG.info("Search {} users", users.size());
+			LOG.info("FillUserInfo.Queue.size: {}", WeiboCNScheduler.instance().taskSize());
+			LOG.info("SuperDao.Queue.size: {}", WeiboCNScheduler.instance().dbTaskSize());
 			if(users.size() == 0) break;
-			CommonUtil.wait2(1000, 3000);
+			
 			WeiboCNScheduler.instance().addAllUser(users);
+			CommonUtil.wait2(10000, 30000);
+//			for(WeiboUser user: users){
+//				fillUserInfo(user);
+//				System.out.println(user);
+//			}
+//			break;
 		}
 
 	}
@@ -125,9 +134,9 @@ public class WeiboCNRobot extends AbstractRobot {
 		
 	}
 	
-	public void chatUser(){
+	public void chatUser(String uid, String content){
 		
-		helper.doChatUser();
+		helper.doChatUser(uid, content);
 		
 	}
 	

@@ -24,8 +24,8 @@ public class AsyncSuperDao{
 	private final static Logger LOG = LoggerFactory.getLogger(AsyncSuperDao.class);
 		
 	private BlockingQueue<Storable> taskQueue;
-	private int batchSize = 2;
-	private boolean autoCreateTable = true;
+	private int batchSize = 1;
+	private boolean autoCreateTable = false;
 	private SuperDao dao;
 	
 	public AsyncSuperDao(String tablePrefix){
@@ -33,6 +33,15 @@ public class AsyncSuperDao{
 		taskQueue = Queues.newLinkedBlockingQueue();
 		if(autoCreateTable) createTables();
 		startTasks();
+	}
+	
+	public AsyncSuperDao(String tablePrefix, int batchSize){
+		this(tablePrefix);
+		this.batchSize = batchSize;
+	}
+	
+	public int taskLength(){
+		return taskQueue.size();
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -53,17 +62,21 @@ public class AsyncSuperDao{
 		return dao;
 	}
 	
+	public void setBatchSize(int batchSize){
+		this.batchSize = batchSize;
+	}
+	
 	/**
 	 * 
 	 */
 	private void startTasks() {
-		Thread saveForumWorke = new Thread(new SaveForumTask());
+		Thread saveForumWorke = new Thread(new SaveForumTask(), "DATA-SAVE-WORKER");
 		saveForumWorke.start();
 	}
 
 	public void save(Storable bean){
 		if(!dao.exist(bean)) taskQueue.add(bean);
-		else LOG.info("Exist forum: {}", bean);
+		else LOG.info("Exist Storable: {}", bean);
 	}
 	
 	private void doSave(){
@@ -103,8 +116,15 @@ public class AsyncSuperDao{
 			if(list.size() == batchSize){
 				try {
 					dao.batchSave(list);
+					LOG.info("Save {} items", list.size());
 				} catch (SQLException e) {
-					e.printStackTrace();
+					LOG.error("Error saver.doSave ", e);
+					/**
+					 * if error, requeue
+					 */
+					if(e.getMessage().contains("No operations allowed")){
+						for(Storable bean0: list) save(bean0);
+					}
 				}
 				list.clear();
 			}

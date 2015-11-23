@@ -4,6 +4,14 @@ public class RobotBean {
 	
 	public static final RobotBean EMPTY = new RobotBean();
 	
+	public RobotBean(){}
+	
+	public RobotBean(String type, String account, String password){
+		this.type = type;
+		this.account = account;
+		this.password = password;
+	}
+	
 	private String type;
 	private String account;
 	private String password;

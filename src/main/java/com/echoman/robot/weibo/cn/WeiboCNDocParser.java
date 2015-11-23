@@ -1,5 +1,9 @@
 package com.echoman.robot.weibo.cn;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Map;
@@ -109,69 +113,86 @@ public class WeiboCNDocParser {
 		return beans;
 	}
 	
+	private static Element getElementByText(Elements elems, String text){
+		Element ret = null;
+		for(Element elem: elems){
+			if(elem.text().contains(text)) ret = elem;
+		}
+		return ret;
+	}
+	
+	
 	public static void parseUserInfo(String html, WeiboUser user){
+		
 		Document doc = Jsoup.parse(html);
-		
 		Elements elems = doc.select("div");
-		Element baseInfo = elems.get(4);
 		
-		String baseText = baseInfo.html();
-		String[] items = baseText.split("<br />");
-		for(String item: items){
-			String[] terms = RegexUtil.getGroup12(item.replaceAll("\n", ""), "(.{2}):(.*)");
-//			String label = terms[0];
-			String value = terms[1];
-//			System.out.println(value);
-			if(item.contains("性别")){
-				user.setGender(value);
-			}
-			if(item.contains("地区")){
-				user.setBaseAddress(value);
-			}
-			if(item.contains("简介")){
-				user.setIntro(value);
-			}
-			if(item.contains("生日")){
-				
-				if(value.length() == 10){
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-					try {
-						user.setBirthday(sdf.parse(value));
-					} catch (ParseException e) {
-						e.printStackTrace();
+		Element preBase = getElementByText(elems, "基本信息");
+		
+		if(preBase != null){
+			
+			Element baseInfo = preBase.nextElementSibling();
+			
+			String baseText = baseInfo.html();
+			String[] items = baseText.split("<br />");
+			
+			for(String item: items){
+				String[] terms = RegexUtil.getGroup12(item.replaceAll("\n", ""), "(.{2}):(.*)");
+//				String label = terms[0];
+				String value = terms[1];
+
+				if(item.contains("性别")) user.setGender(value);
+				if(item.contains("地区")) user.setBaseAddress(value);
+				if(item.contains("简介")) user.setIntro(value);
+				if(item.contains("生日")){
+					
+					if(value.length() == 10){
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+						try {
+							user.setBirthday(sdf.parse(value));
+						} catch (ParseException e) {
+							e.printStackTrace();
+						}
 					}
+					
 				}
-				
-			}
-			if(item.contains("标签")){
-				String tagString = "";
-				String[] tags = value.split("&nbsp;");
-				for(String tg: tags){
-					String tagName = RegexUtil.getGroup1(tg, "<a[^>]*>(.*)</a>");
-					if(!tagName.contains("更多")){
-						tagString += (tagName + ",");
+				if(item.contains("标签")){
+					String tagString = "";
+					String[] tags = value.split("&nbsp;");
+					for(String tg: tags){
+						String tagName = RegexUtil.getGroup1(tg, "<a[^>]*>(.*)</a>");
+						if(!tagName.contains("更多")){
+							tagString += (tagName + ",");
+						}
 					}
+					user.setTag(tagString);
 				}
-				user.setTag(tagString);
 			}
 		}
+		
 		/**
 		 * school
 		 */	
-		Element studyInfo = elems.get(6);
-		String studyText = studyInfo.html();
-		String[] items1 = studyText.split("<br />");
-		user.setSchool(items1[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
-//		System.out.println(user);
+		Element preSchool = getElementByText(elems, "学习经历");
+		if(preSchool != null){
+			Element studyInfo = preSchool.nextElementSibling();
+			String studyText = studyInfo.html();
+			String[] items1 = studyText.split("<br />");
+			String school = items1[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " ");
+			user.setSchool(school);
+		}
+
 		/**
 		 * company
 		 */
-		Element jobInfo = elems.get(8);
-		String jobText = jobInfo.html();
-		String[] items2 = jobText.split("<br />");
-		user.setCompany(items2[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
+		Element preCompany = getElementByText(elems, "工作经历");
+		if(preCompany != null){
+			Element jobInfo = preCompany.nextElementSibling();
+			String jobText = jobInfo.html();
+			String[] items2 = jobText.split("<br />");
+			user.setCompany(items2[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
+		}
 		
-//		System.out.println("2>>> " + user);
 	}
 	
 	public static void parseUserInfo1(String html, WeiboUser user){
@@ -195,7 +216,14 @@ public class WeiboCNDocParser {
 				user.setFans(Integer.valueOf(value));
 			}
 		}
-//		System.out.println("3>>> " + user);
+	}
+	
+
+	public static String getMsgFormAction(String html) {
+		Document doc = Jsoup.parse(html);
+		Element form = doc.getElementById("reply");
+		String action = form.attr("action");
+		return action;
 	}
 	
 	public static void main(String...strings){
@@ -213,4 +241,5 @@ public class WeiboCNDocParser {
 		}
 		
 	}
+
 }

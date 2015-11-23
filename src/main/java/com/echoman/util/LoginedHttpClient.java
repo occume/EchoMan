@@ -89,7 +89,7 @@ public class LoginedHttpClient {
 		
 		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 		
-		HttpHost proxy = new HttpHost("222.255.11.107", 8080);
+		HttpHost proxy = new HttpHost("203.195.162.96", 8080);
 		
 		httpClient = HttpClients
 				.custom()
@@ -318,6 +318,10 @@ public class LoginedHttpClient {
 				return hd.getValue();
 		}
 		return "";
+	}
+	
+	public String getLocation(){
+		return getHeaderVal("Location");
 	}
 	
 	public String getCookie(String name){

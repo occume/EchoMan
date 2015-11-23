@@ -9,14 +9,18 @@ import java.util.List;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.echoman.robot.weibo.model.FansKeywords;
+import com.echoman.model.SendTasks;
 import com.echoman.robot.weibo.model.WeiboUser;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.DataSourceFactory;
 import com.google.common.collect.Lists;
 
 public class SuperDao implements Dao<Storable> {
+	
+	private final static Logger LOG = LoggerFactory.getLogger(SuperDao.class);
 	
 	public String tablePrefix = "robot_";
 	
@@ -86,7 +90,10 @@ public class SuperDao implements Dao<Storable> {
 		
 		try {
 			return getQueryRunner().query(sql, bean.equalValues(), EXIST_HANDLER);
-		} catch (SQLException e) { return false; }
+		} catch (SQLException e) { 
+			LOG.error("Superdao.exist ", e);
+			return false; 
+		}
 	}
 	
 	public<T> List<T> getBeans(final String sql, final Class<T> beanClass) throws SQLException{
@@ -177,7 +184,7 @@ public class SuperDao implements Dao<Storable> {
 			
 			conn.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOG.error("Superdao.update ", e);
 			if(conn != null)
 				try {
 					conn.rollback();
@@ -263,22 +270,33 @@ public class SuperDao implements Dao<Storable> {
 	}
 	
 	public static void main(String...strings) throws SQLException{
+		
+		SuperDao dao = new SuperDao();
+		
 //		WeiboUser bean = new WeiboUser();
 //		bean.setName("jd");
 //		bean.setUid("001");;
-		SuperDao dao = new SuperDao();
+		
 //		dao.createTable(new WeiboUser());
 //		dao.save(bean);
 		
 //		List<FansKeywords> users = dao.getBeans("select * from jtyd_fans_keywords limit 2", FansKeywords.class);
 //		System.out.println(users);
-		String getSql = "select * from jtyd_fans_keywords where del_flag = 0 limit 1";
-		FansKeywords kw = dao.getBean(getSql, FansKeywords.class);
+		
+//		String getSql = "select * from jtyd_fans_keywords where del_flag = 0 limit 1";
+//		FansKeywords kw = dao.getBean(getSql, FansKeywords.class);
+//		System.out.println(kw);
 		
 //		String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
 //		dao.update(updateSql, new Object[]{kw.getId()});
-		System.out.println(kw);
 		
-//		dao.save(null);
+		
+		String getSql0 = "select * from jtyd_send_tasks limit 1";
+		SendTasks task = dao.getBean(getSql0, SendTasks.class);
+		System.out.println(task);
+		
+		String getSql1 = "select * from jtyd_weibo_user where grab_tag = '"+ task.getFansKeywords() +"' limit 1";
+		WeiboUser user = dao.getBean(getSql1, WeiboUser.class);
+		System.out.println(user);
 	}
 }

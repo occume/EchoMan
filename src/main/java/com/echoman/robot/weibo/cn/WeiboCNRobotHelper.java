@@ -225,31 +225,38 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 	}
 
 	
-	private void prepaerChat(){
-		String url = "http://weibo.cn/im/chat?uid=1864100610&rl=0&rand=718260";
+	private String prepaerChat(String uid){
+//		String url = "http://weibo.cn/im/chat?uid=1864100610&rl=0&rand=718260";
+		String url = "http://weibo.cn/im/chat?uid=" + uid + "&rl=0";
 		Map<String, String> 
 		headers = getGeneralHeaders();
 		headers.put("Host", "weibo.cn");
 		headers.put("Referer", "http://weibo.cn/im/chat?uid=1864100610&rl=0");
-		http.get(url, headers);
+		String html = http.get(url, headers);
+		
+		return WeiboCNDocParser.getMsgFormAction(html);
 	}
 
-	public void doChatUser() {
-		prepaerChat();
-		String url = "http://weibo.cn/msg/do/post?vt=4&st=9c38a1";
+	public void doChatUser(String uid, String content) {
+		
+		String action = prepaerChat(uid);
+		
+//		String url = "http://weibo.cn/msg/do/post?vt=4&st=9c38a1";
+		String url = "http://weibo.cn" + action;
 		
 		Map<String, String> 
 		headers = getGeneralHeaders();
 		headers.put("Host", "weibo.cn");
-		headers.put("Referer", "http://weibo.cn/im/chat?uid=1864100610&rl=0");
+		headers.put("Referer", "http://weibo.cn/im/chat?uid="+ uid +"&rl=0");
 	
 		Map<String, Object>
 		params = Maps.newHashMap();
-		params.put("content", "恭喜发财");
+		params.put("content", content);
 		params.put("rl", "1");
 		params.put("send", "发送");
-		params.put("uid", "1864100610");
-		System.out.println("---> before chat");
+		params.put("uid", uid);
+		
+		System.out.println(" --> " + uid + " " + content);
 		String html = http.post(url, params, headers);
 		System.out.println("---> " + html);
 	}
