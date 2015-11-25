@@ -1,6 +1,7 @@
 package com.echoman.robot.weibo.cn;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -10,12 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import com.echoman.model.RobotBean;
 import com.echoman.model.SendTasks;
+import com.echoman.model.SendTasksLog;
 import com.echoman.robot.RobotType;
 import com.echoman.robot.weibo.model.FansKeywords;
 import com.echoman.robot.weibo.model.WeiboUser;
 import com.echoman.storage.AsyncSuperDao;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.Config;
+import com.echoman.util.DataSourceFactory;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
@@ -35,14 +38,15 @@ public class WeiboCNScheduler {
 	private BlockingQueue<WeiboUser> taskQueue = Queues.newLinkedBlockingQueue();
 	private BlockingQueue<WeiboUser> completeQueue = Queues.newLinkedBlockingQueue();
 	
+	
 	Set<WeiboUser> allUsers = Sets.newHashSet();
 	
 	private String feed;
 	private volatile WeiboCNRobot currRobot;
-	private AsyncSuperDao asyncDao;
+	private WeiboCNDao dao;
 	
 	public WeiboCNScheduler(){
-		asyncDao = new AsyncSuperDao(TABLE_PREFIX, 3);
+		dao = new WeiboCNDao(TABLE_PREFIX, 3);
 		accQueue.addAll(Config.getRobotBeans(RobotType.WEIBO));
 		changeCurrRobot();
 	}
@@ -79,13 +83,19 @@ public class WeiboCNScheduler {
 	}
 	
 	public int dbTaskSize(){
-		return asyncDao.taskLength();
+		return dao.taskLength();
 	}
 	
 	public void addUser(WeiboUser user){
 		
 		if(!(taskQueue.contains(user) || completeQueue.contains(user))){
-			taskQueue.add(user);
+			if(taskQueue.add(user))
+				LOG.info("AddUser: {}", user);
+			else
+				LOG.info("AddUser fail...");
+		}
+		else{
+			LOG.info("Repeat user: {}", user);
 		}
 		
 	}
@@ -127,27 +137,17 @@ public class WeiboCNScheduler {
 	 */
 	private void doSearchUser(){
 		
-		String getSql = "select * from jtyd_fans_keywords where del_flag = 0 limit 1";
-		FansKeywords kw = null;
-		try {
-			
-			kw = asyncDao.superDao().getBean(getSql, FansKeywords.class);
-			
-			if(kw == null){
-				System.out.println("Waiting for keywords ...");
-				CommonUtil.wait2(2000, 5000);
-			}
-			
-			String updateSql = "update jtyd_fans_keywords set del_flag = 1 where id = ?";
-			asyncDao.superDao().update(updateSql, new Object[]{kw.getId()});
-			System.out.println(kw);
-			
-			currRobot.searchUser(kw.getKeywords());
-			
-		} catch (Exception e) {
-			LOG.error("Error when search user ", e);
-		}
+		FansKeywords kw = dao.getAndUpdateKeyword();
 		
+		if(kw == null){
+			System.out.println("Waiting for keywords ...");
+			CommonUtil.wait2(2000, 5000);
+			return;
+		}
+		LOG.info("Get keyword: {}", kw);
+		
+		currRobot.searchUser(kw.getKeywords());
+			
 		CommonUtil.wait2(1000, 2000);
 	}
 	/**
@@ -165,8 +165,7 @@ public class WeiboCNScheduler {
 			completeQueue.add(user);
 			
 			currRobot.fillUserInfo(user);
-//			System.out.println("4>>> " + user);
-			asyncDao.save(user);
+			dao.save(user);
 			
 			Thread.sleep(CommonUtil.random(1000, 2000));
 			
@@ -205,26 +204,26 @@ public class WeiboCNScheduler {
 	 * 
 	 */
 	public void doBroadcast(){
-		String getSql0 = "select * from jtyd_send_tasks limit 1";
 		
-		try {
-			SendTasks task = asyncDao.superDao().getBean(getSql0, SendTasks.class);
-			System.out.println(task);
-			
-			String getSql1 = "select * from jtyd_weibo_user where grab_tag = '"+ task.getFansKeywords() +"' limit 1";
-			WeiboUser user = asyncDao.superDao().getBean(getSql1, WeiboUser.class);
-			System.out.println(user);
-			
-			RobotBean bean = new RobotBean("WEIBO", task.getUserName(), task.getUserPassword());
-			WeiboCNRobot robot = new WeiboCNRobot(bean);
-			robot.login();
-			
-			robot.chatUser(user.getUserId(), "恭喜发财");
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
+		SendTasks sendTasks = dao.getSendTasks();
+		
+		if(sendTasks == null){
+			LOG.info("Waiting for sendTasks ...");
+			CommonUtil.wait2(2000, 5000);
+			return;
 		}
 		
+		RobotBean bean = new RobotBean("WEIBO", sendTasks.getUserName(), sendTasks.getUserPassword());
+		WeiboCNRobot robot = new WeiboCNRobot(bean);
+		robot.login();
+		
+		List<WeiboUser> targets = dao.getWeiboUserByGrabtag(sendTasks.getFansKeywords());
+		for(WeiboUser target: targets){
+			robot.chatUser(target.getUserId(), "恭喜发财");
+			SendTasksLog log = new SendTasksLog(sendTasks.getId(), sendTasks.getArticleId(), 
+					target.getUserId(), target.getUserName());
+			dao.save(log);
+		}
 	}
 	
 	private class CollectIDTask implements Runnable{
@@ -253,5 +252,11 @@ public class WeiboCNScheduler {
 		public void run() {
 			
 		}
+	}
+	
+	public String stats(){
+		StringBuffer sb = new StringBuffer();
+		sb.append(DataSourceFactory.stats());
+		return sb.toString();
 	}
 }

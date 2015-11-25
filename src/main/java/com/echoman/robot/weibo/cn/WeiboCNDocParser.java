@@ -178,7 +178,8 @@ public class WeiboCNDocParser {
 			Element studyInfo = preSchool.nextElementSibling();
 			String studyText = studyInfo.html();
 			String[] items1 = studyText.split("<br />");
-			String school = items1[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " ");
+			String school = items1[0].substring(1)
+					.replaceAll("middot;", "").replaceAll("&nbsp;", " ").replaceAll("\n", "");
 			user.setSchool(school);
 		}
 
@@ -190,7 +191,9 @@ public class WeiboCNDocParser {
 			Element jobInfo = preCompany.nextElementSibling();
 			String jobText = jobInfo.html();
 			String[] items2 = jobText.split("<br />");
-			user.setCompany(items2[0].substring(1).replaceAll("middot;", "").replaceAll("&nbsp;", " "));
+			String company = items2[0].substring(1)
+					.replaceAll("middot;", "").replaceAll("&nbsp;", " ").replaceAll("\n", "");
+			user.setCompany(company);
 		}
 		
 	}

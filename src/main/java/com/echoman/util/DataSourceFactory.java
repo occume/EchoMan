@@ -1,6 +1,9 @@
 package com.echoman.util;
 
+import java.sql.SQLException;
+
 import javax.sql.DataSource;
+
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class DataSourceFactory {
@@ -26,10 +29,12 @@ public class DataSourceFactory {
 			dataSource.setJdbcUrl(url);
 			dataSource.setUser(username);
 			dataSource.setPassword(password);
-			dataSource.setAcquireIncrement(5);
-			dataSource.setMinPoolSize(5);
-			dataSource.setMaxPoolSize(10);
-			dataSource.setMaxIdleTime(120);
+			dataSource.setAcquireIncrement(2);
+			dataSource.setMinPoolSize(10);
+			dataSource.setMaxPoolSize(20);
+			dataSource.setMaxIdleTime(3600);
+//			dataSource.setIdleConnectionTestPeriod(60);
+//			dataSource.setCheckoutTimeout(20);
 			
 			dataSource.setAutomaticTestTable("_test");
 			
@@ -40,5 +45,29 @@ public class DataSourceFactory {
 	
 	public static DataSource getDataSource(){
 		return dataSource;
+	}
+	
+	public static String stats(){
+		StringBuffer sb = new StringBuffer();
+		try {
+			sb
+			.append("getAutomaticTestTable: ").append(dataSource.getAutomaticTestTable()).append("\n")
+			.append("getConnectionCustomizerClassName: ").append(dataSource.getConnectionCustomizerClassName()).append("\n")
+			.append("getConnectionTesterClassName: ").append(dataSource.getConnectionTesterClassName()).append("\n")
+			.append("getIdleConnectionTestPeriod: ").append(dataSource.getIdleConnectionTestPeriod()).append("\n")
+			.append("getInitialPoolSize: ").append(dataSource.getInitialPoolSize()).append("\n")
+			.append("getMaxIdleTime: ").append(dataSource.getMaxIdleTime()).append("\n")
+			.append("getMaxIdleTimeExcessConnections: ").append(dataSource.getMaxIdleTimeExcessConnections()).append("\n")
+			.append("getMaxStatements: ").append(dataSource.getMaxStatements()).append("\n")
+			.append("getMaxStatementsPerConnection: ").append(dataSource.getMaxStatementsPerConnection()).append("\n")
+			.append("getNumBusyConnections: ").append(dataSource.getNumBusyConnections()).append("\n")
+			.append("getNumIdleConnections: ").append(dataSource.getNumIdleConnections()).append("\n")
+			.append("getNumUnclosedOrphanedConnections: ").append(dataSource.getNumUnclosedOrphanedConnections()).append("\n")
+			.append("getDescription: ").append(dataSource.getDescription()).append("\n")
+			;
+		} catch (SQLException e) {
+			sb.append(e.getMessage());
+		}
+		return sb.toString();
 	}
 }

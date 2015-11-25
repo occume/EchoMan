@@ -26,7 +26,7 @@ public class AsyncSuperDao{
 	private BlockingQueue<Storable> taskQueue;
 	private int batchSize = 1;
 	private boolean autoCreateTable = false;
-	private SuperDao dao;
+	protected SuperDao dao;
 	
 	public AsyncSuperDao(String tablePrefix){
 		dao = new SuperDao(tablePrefix);
@@ -77,18 +77,6 @@ public class AsyncSuperDao{
 	public void save(Storable bean){
 		if(!dao.exist(bean)) taskQueue.add(bean);
 		else LOG.info("Exist Storable: {}", bean);
-	}
-	
-	private void doSave(){
-		try {
-			List<Storable> list = Lists.newArrayList();
-			for(int i = 0; i < batchSize; i++){
-				list.add(taskQueue.take());
-			}
-			dao.batchSave(list);
-		} catch (Exception e) {
-			LOG.error("Error doSaveForum", e);
-		}
 	}
 	
 	private Map<String, Saver> savers = Maps.newHashMap();
@@ -176,6 +164,18 @@ public class AsyncSuperDao{
 			if(input.startsWith(name)) return true;
 		}
 		return false;
+	}
+	
+	protected String getWilds(int num){
+		if(num == 0) return "";
+		StringBuffer sb = new StringBuffer();
+		sb.append("(");
+		for(int i = 0; i < num; i++){
+			sb.append("?").append(",");
+		}
+		sb.setCharAt(2 * num, (char)0);
+		sb.append(")");
+		return sb.toString();
 	}
 	
 	public static final String[] EXCLUDE_PACKAGE = {

@@ -82,9 +82,9 @@ public class SuperDao implements Dao<Storable> {
 	@Override
 	public boolean exist(Storable bean) {
 		
-		if(bean == null){
-			throw new IllegalArgumentException("bean must not be null");
-		}
+		if(bean == null) throw new IllegalArgumentException("bean must not be null");
+		
+		if(bean.equalValues() == null) return false;
 		
 		String sql = assembleExist(bean);
 		
@@ -142,6 +142,18 @@ public class SuperDao implements Dao<Storable> {
 				return result;
 			}
 		});
+	}
+	
+	public<T> T getBean(final String sql, Object[] params, final Class<T> beanClass) throws SQLException{
+		
+		return getQueryRunner().query(sql, new ResultSetHandler<T>(){
+			@Override
+			public T handle(ResultSet rs) throws SQLException {
+				T result = null;
+				if(rs.next()) result = fillBean(rs, sql, beanClass);
+				return result;
+			}
+		}, params);
 	}
 	
 	private <T> T fillBean(ResultSet rs, String sql, final Class<T> beanClass) throws SQLException{

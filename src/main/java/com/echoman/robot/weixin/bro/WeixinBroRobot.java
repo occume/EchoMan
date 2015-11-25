@@ -112,6 +112,6 @@ public class WeixinBroRobot {
 	
 	public static void main(String[] args) {
 		WeixinBroRobot robot = new WeixinBroRobot();
-		robot.searchGZH("xyjj0002");
+		robot.searchGZH("xlflxyy");
 	}
 }

@@ -282,10 +282,10 @@ public class WeiboUser implements Storable{
 
 	@Override
 	public String toString() {
-		return "WeiboUser [userName=" + userName + ", baseAddress="
-				+ baseAddress + ", gender=" + gender + ", sex=" + sex
-				+ ", school=" + school + ", company=" + company + ", tag="
-				+ tag + ", attentions=" + attentions + ", fans=" + fans
-				+ ", grabTag=" + grabTag + "]";
+		return "WeiboUser [userId=" + userId + ", baseAddress=" + baseAddress
+				+ ", gender=" + gender + ", school=" + school + ", company="
+				+ company + ", attentions=" + attentions + ", grabTag="
+				+ grabTag + "]";
 	}
+	
 }
