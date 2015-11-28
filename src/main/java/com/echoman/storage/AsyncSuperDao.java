@@ -166,17 +166,6 @@ public class AsyncSuperDao{
 		return false;
 	}
 	
-	protected String getWilds(int num){
-		if(num == 0) return "";
-		StringBuffer sb = new StringBuffer();
-		sb.append("(");
-		for(int i = 0; i < num; i++){
-			sb.append("?").append(",");
-		}
-		sb.setCharAt(2 * num, (char)0);
-		sb.append(")");
-		return sb.toString();
-	}
 	
 	public static final String[] EXCLUDE_PACKAGE = {
 		"java.", "sun.", "javax.", "com.sun.", "org.apache.", "org.slf4j.", "com.google.",

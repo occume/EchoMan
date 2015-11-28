@@ -3,36 +3,31 @@ package com.echoman.robot.qq;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.script.ScriptException;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.org.mozilla.javascript.internal.NativeObject;
-import jodd.util.HtmlDecoder;
+
 
 import com.echoman.model.RobotBean;
 import com.echoman.robot.AbstractRobot;
 import com.echoman.robot.Robot;
+import com.echoman.robot.qq.model.QqGroupMsg;
+import com.echoman.storage.AsyncSuperDao;
 
 public class QQRobot extends AbstractRobot{
 	
 	private final static Logger LOG = LoggerFactory.getLogger(QQRobot.class);
 	private static final String TYPE = "QQ";
+	
+	private QQRobotHelper helper = new QQRobotHelper(this);
 	
 	public QQRobot(){}
 	
@@ -42,14 +37,8 @@ public class QQRobot extends AbstractRobot{
 	
 	public Robot login(){
 		
-		xlogin();
+		helper.login();
 		
-		try {
-			check();
-			doLogin();
-		} catch (Exception e) {
-			LOG.error("Login fail, {}", e);
-		}
 		return this;
 	}
 	
@@ -114,111 +103,6 @@ public class QQRobot extends AbstractRobot{
 		}
 	}
 	
-	private void xlogin(){
-		String url = "http://xui.ptlogin2.qq.com/cgi-bin/xlogin?"
-				+ "proxy_url=http%3A//qzs.qq.com/qzone/v6/portal/proxy.html&"
-				+ "daid=5&"
-				+ "pt_qzone_sig=1&"
-				+ "hide_title_bar=1&"
-				+ "low_login=0&"
-				+ "qlogin_auto_login=1&"
-				+ "no_verifyimg=1&"
-				+ "link_target=blank&"
-				+ "appid=549000912&"
-				+ "style=22&"
-				+ "target=self&"
-				+ "s_url=http%3A%2F%2Fqzs.qq.com%2Fqzone%2Fv5%2Floginsucc.html%3Fpara%3Dizone&"
-				+ "pt_qr_app=%E6%89%8B%E6%9C%BAQQ%E7%A9%BA%E9%97%B4&"
-				+ "pt_qr_link=http%3A//z.qzone.com/download.html&self_regurl=http%3A//qzs.qq.com/qzone/v6/reg/index.html&"
-				+ "pt_qr_help_link=http%3A//z.qzone.com/download.html";
-		
-		http.get(url);
-	}
-	
-	private void check() throws FileNotFoundException, ScriptException, URISyntaxException{
-
-		String loginSig = http.getCookie("pt_login_sig");
-		
-		Map<String, String> hds = getGeneralHeaders();
-		hds.put("Host", "check.ptlogin2.qq.com");
-		
-		String url = "http://check.ptlogin2.qq.com/check?"
-				+ "regmaster=&"
-				+ "pt_tea=1&"
-				+ "pt_vcode=1&"
-				+ "uin="+ account +"&"
-				+ "appid=549000912&"
-				+ "js_ver=10133&"
-				+ "js_type=1&"
-				+ "login_sig="+ loginSig +"&"
-				+ "u1=http%3A%2F%2Fqzs.qq.com%2Fqzone%2Fv5%2Floginsucc.html%3Fpara%3Dizone&"
-				+ "r=0.970304226894594";
-		
-		String content = http.get(url, hds);
-		
-		Pattern pat = Pattern.compile("([^()]+)");
-		Matcher mat = pat.matcher(content);
-		String funName = "";
-		String argus = "";
-
-		if(mat.find()){
-			funName = mat.group();
-		}
-		
-		if(mat.find()){
-			argus = mat.group();
-		}
-		
-		runCallback("ptui_checkVC("+ argus +");");
-		verifyCode = bds.get("verifyCode").toString();
-		salt = bds.get("salt").toString();
-		LOG.info("Get verifyCode: {}", verifyCode);
-	}
-	
-	private void doLogin() throws IOException, ScriptException, URISyntaxException{
-		
-		String loginSig = http.getCookie("pt_login_sig");
-		String verifySession = http.getCookie("ptvfsession");
-		
-		encriptPassword(password);
-		
-		long now = System.currentTimeMillis();
-		
-		String url = "http://ptlogin2.qq.com/login?"
-				+ "u="+ account +"&"
-				+ "verifycode="+ verifyCode +"&"
-				+ "pt_vcode_v1=0&"
-				+ "pt_verifysession_v1="+ verifySession +"&"
-				+ "p="+ encrptedPassword +"&"
-				+ "pt_randsalt=0&"
-				+ "u1=http://qzs.qq.com/qzone/v5/loginsucc.html?para=izone&"
-				+ "ptredirect=0&"
-				+ "h=1&t=1&g=1&from_ui=1&ptlang=2052&"
-				+ "action=3-8-"+ now +"&"
-				+ "js_ver=10133&js_type=1&"
-				+ "login_sig="+ loginSig +"&"
-				+ "pt_uistyle=32&"
-				+ "aid=549000912&"
-				+ "daid=5&pt_qzone_sig=1&";
-
-		Map<String, String> hds = getGeneralHeaders();
-		
-		String ret = http.get(url, hds);
-		
-		runCallback(HtmlDecoder.decode(ret));
-		loginResultCode = bds.get("loginResultCode").toString();
-		loginResultMsg = bds.get("loginResultMsg").toString();
-		userName = bds.get("userName").toString();
-
-		if("0".equals(loginResultCode)){ 
-			http.setLogined(true);
-			LOG.info("Login success, {}", userName);
-		}
-		else{
-			LOG.info("Login fail, {}", loginResultMsg);
-		}
-	}
-	
 	private Map<Long, String> pareseGroupList(String script) throws Exception{
 		
 		URL underscore = QQRobot.class.getClassLoader().getResource("com/echoman/robot/qq/underscore.js");
@@ -253,133 +137,17 @@ public class QQRobot extends AbstractRobot{
 		}
 	}
 	
-	private String verifyCode;
-	private String salt;
-	private String encrptedPassword;
 	private String bkn;
-	private int seq;
-	private int es;
-	private int pullLen;
-	private String loginResultCode;
-	private String loginResultMsg;
-	private String userName;
+	private AsyncSuperDao dao = new AsyncSuperDao("jtyd_", 3);
 	
-	private void preShowMessage(){
-		String url0 = "http://msgwall.qun.qq.com/?groupUin=89304269&appID=100730554";		
-		Map<String, String> hds0 = getGeneralHeaders();
-		hds0.put("Host", "msgwall.qun.qq.com");		
-		String html = http.get(url0, hds0);
+	public void showRoamMessage(String groupId) throws Exception{
 		
-		Document doc = Jsoup.parse(html);
-		Elements scripts = doc.select("script");
+		List<QqGroupMsg> msgList = helper.showRoamMessage(groupId);
 		
-		/**
-		 *  Get script url
-		 */
-		String indexJsUrl = "";
-		for(Element script: scripts){
-			String attr = script.attr("src");
-			if(attr.contains("s.url.cn/qqun/qun/msgwall/js")){
-				indexJsUrl = attr;
-			}
+		for(QqGroupMsg msg: msgList){
+			dao.save(msg);
 		}
 		
-		Pattern pattern = Pattern.compile("pullLen:(\\d+)");
-		html = http.get(indexJsUrl);
-		Matcher matcher = pattern.matcher(html);
-		
-		if(matcher.find()){
-			String pullen = matcher.group(1);
-			pullLen = Integer.valueOf(pullen);
-		}
-	}
-	public void showRoamMessage() throws Exception{
-		
-		String url = "http://msgwall.qun.qq.com/cgi-bin/get_qun_roam_msg";
-		
-		Map<String, String> hds = getGeneralHeaders();
-		hds.put("Accept-Language:", "en-us,en");
-		hds.put("Host", "msgwall.qun.qq.com");
-		hds.put("Origin", "http://msgwall.qun.qq.com");
-		hds.put("Referer", "http://msgwall.qun.qq.com/?groupUin=89304269&appID=100730554");
-
-		getBkn(http.getCookie("skey"));
-		
-		Map<String, Object> params = new HashMap<>();
-		if(seq == 0){
-			preShowMessage();
-			params.put("ps", "60");
-			params.put("bs", "0");
-			params.put("es", "0");
-			params.put("mode", "1");
-		}
-		else{
-			params.put("ps", pullLen + "");
-			params.put("bs", (es + 1) + "");
-			params.put("es", (es + pullLen) + "");
-		}
-		params.put("gid", "89304269");
-		params.put("seq", seq++ + "");
-		params.put("bkn", bkn);
-		params.put("mode", "1");
-		
-		String result = http.post(url, params, hds);
-		parseMessage(result);
-	}
-	
-	private void parseMessage(String html) throws Exception{
-		
-		JSONObject json = new JSONObject(html);
-		
-		JSONObject result = json.getJSONObject("result");
-		int bs = result.getInt("bs");
-		if(es == 0)
-			es = result.getInt("es");
-		
-		JSONArray cl = result.getJSONArray("cl");
-		
-		for(int i = 0; i < cl.length();i++){
-			JSONObject item = cl.getJSONObject(i);
-			Object obj = item.get("il");
-			if(obj instanceof String) continue;
-			JSONArray il = (JSONArray) obj;
-			for(int k = 0; k < il.length(); k++){
-				JSONObject il0 = il.getJSONObject(k);
-				if(il0.has("v")){
-					String v = il0.getString("v");
-					System.out.println(v);
-					
-				}
-				else if(il0.has("i")){
-					String ii = il0.getString("i");
-					System.out.println(ii);
-				}
-			}
-		}
-
-		LOG.info("Get bs: {}", bs);
-	}
-	
-	private void runCallback(String funString) throws FileNotFoundException, ScriptException, URISyntaxException{
-		
-		URL url = QQRobot.class.getClassLoader().getResource("com/echoman/robot/qq/callback.js");
-		
-		FileReader reader = new FileReader(new File(url.getPath()));
-		engine.eval(reader);
-		engine.eval(funString);
-	}
-	
-	private void encriptPassword(String password) throws FileNotFoundException, ScriptException{
-		URL url = QQRobot.class.getClassLoader().getResource("com/echoman/robot/qq/ecryption.js");
-		
-		FileReader reader = new FileReader(new File(url.getPath()));
-		engine.eval(reader);
-		engine.eval("var encrptedPassword = "
-				+ "$.Encryption.getEncryption('"+ password +"', '"+ salt +"', '"+ verifyCode +"', false);");
-		
-		encrptedPassword = bds.get("encrptedPassword").toString();
-		
-		LOG.info("Encrpt password: {}", bds.get("encrptedPassword"));
 	}
 	
 	private void getBkn(String skey) throws FileNotFoundException, ScriptException, URISyntaxException{
@@ -440,6 +208,11 @@ public class QQRobot extends AbstractRobot{
 	@Override
 	public String getJSFileDirectory() {
 		return "com/echoman/robot/qq/";
+	}
+
+	@Override
+	public boolean isLogin() {
+		return false;
 	}
 
 }

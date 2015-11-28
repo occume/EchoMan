@@ -7,10 +7,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.echoman.model.RobotBean;
 import com.echoman.model.SendTasks;
 import com.echoman.robot.weibo.model.FansKeywords;
 import com.echoman.robot.weibo.model.WeiboUser;
+import com.echoman.robot.weixin.model.WeixinArticle;
 import com.echoman.storage.AsyncSuperDao;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -25,6 +25,9 @@ public class WeiboCNDao extends AsyncSuperDao {
 
 	public WeiboCNDao(String tablePrefix, int batchSize) {
 		super(tablePrefix, batchSize);
+		FansKeywords kw = new FansKeywords();
+		kw.setId("120");
+		searchedKw.add(kw);
 	}
 
 	public FansKeywords getAndUpdateKeyword(){
@@ -51,7 +54,19 @@ public class WeiboCNDao extends AsyncSuperDao {
 		if(num == 0) return "";
 		String ret = "";
 		ret = getWilds(num);
-		return " not in " + ret;
+		return " and `id` not in " + ret;
+	}
+
+	protected String getWilds(int num){
+		if(num == 0) return "";
+		StringBuilder sb = new StringBuilder();
+		sb.append("(");
+		for(int i = 0; i < num; i++){
+			sb.append("?").append(",");
+		}
+		sb.deleteCharAt(2 * num);
+		sb.append(")");
+		return sb.toString();
 	}
 	
 	private Object[] getNotInWilsParam(){
@@ -77,14 +92,25 @@ public class WeiboCNDao extends AsyncSuperDao {
 	}
 	
 	public List<WeiboUser> getWeiboUserByGrabtag(String grabTag){
-		String getSql1 = "select * from jtyd_weibo_user where grab_tag = '"+ grabTag +"' limit 1";
+		String sql = "select * from jtyd_weibo_user where grab_tag = '"+ grabTag +"' limit 1";
 		List<WeiboUser> users = Lists.newArrayList();
 		try {
-			users = dao.getBeans(getSql1, WeiboUser.class);
+			users = dao.getBeans(sql, WeiboUser.class);
 		} catch (SQLException e) {
 			LOG.error("Error getWeiboUserByGrabtag, ", e);
 		}
 		return users;
+	}
+	
+	public WeixinArticle getWeixinArticleById(String id){
+		String sql = "select * from jtyd_weixin_article where id = ?";
+		WeixinArticle article = null;
+		try {
+			article = dao.getBean(sql, new Object[]{id}, WeixinArticle.class);
+		} catch (SQLException e) {
+			LOG.error("Error getWeixinArticleById, ", e);
+		}
+		return article;
 	}
 	
 	public static void main(String...strings){

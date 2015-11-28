@@ -34,7 +34,7 @@ public class BaiduScheduler {
 	}
 	
 	public BaiduScheduler(){
-		asyncDao = new AsyncSuperDao();
+		asyncDao = new AsyncSuperDao("", 3);
 		accQueue = Queues.newArrayDeque(Config.getRobotBeans(RobotType.BAIDU));
 		initCurrRobot();
 	}

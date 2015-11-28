@@ -1,6 +1,5 @@
 package com.echoman.robot.weibo.cn;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -15,7 +14,7 @@ import com.echoman.model.SendTasksLog;
 import com.echoman.robot.RobotType;
 import com.echoman.robot.weibo.model.FansKeywords;
 import com.echoman.robot.weibo.model.WeiboUser;
-import com.echoman.storage.AsyncSuperDao;
+import com.echoman.robot.weixin.model.WeixinArticle;
 import com.echoman.util.CommonUtil;
 import com.echoman.util.Config;
 import com.echoman.util.DataSourceFactory;
@@ -46,7 +45,7 @@ public class WeiboCNScheduler {
 	private WeiboCNDao dao;
 	
 	public WeiboCNScheduler(){
-		dao = new WeiboCNDao(TABLE_PREFIX, 3);
+		dao = new WeiboCNDao(TABLE_PREFIX, 1);
 		accQueue.addAll(Config.getRobotBeans(RobotType.WEIBO));
 		changeCurrRobot();
 	}
@@ -117,8 +116,8 @@ public class WeiboCNScheduler {
 	public void start(){
 		
 //		collectIDByTranverse();
-		collectBySearch();
-//		doBroadcast();
+//		collectBySearch();
+		doBroadcast();
 	}
 	
 	private void collectBySearch(){
@@ -217,12 +216,21 @@ public class WeiboCNScheduler {
 		WeiboCNRobot robot = new WeiboCNRobot(bean);
 		robot.login();
 		
+		WeixinArticle article = dao.getWeixinArticleById(sendTasks.getArticleId());
+		String content = "恭喜发财";
+		if(article != null){
+			content = article.getArticleKeywords();
+			content += "\t";
+			content += article.getArticleUrl();
+		}
+		
 		List<WeiboUser> targets = dao.getWeiboUserByGrabtag(sendTasks.getFansKeywords());
 		for(WeiboUser target: targets){
-			robot.chatUser(target.getUserId(), "恭喜发财");
+			robot.chatUser(target.getUserId(), content);
 			SendTasksLog log = new SendTasksLog(sendTasks.getId(), sendTasks.getArticleId(), 
 					target.getUserId(), target.getUserName());
 			dao.save(log);
+			CommonUtil.wait2(1000, 3000);
 		}
 	}
 	
@@ -236,14 +244,28 @@ public class WeiboCNScheduler {
 	private class SearchUserTask implements Runnable{
 		@Override
 		public void run() {
-			for(;;) doSearchUser();
+			for(;;) {
+				try{
+					doSearchUser();
+				}
+				catch(Throwable e){
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 	
 	private class FillANDSaveUserTask implements Runnable{
 		@Override
 		public void run() {
-			for(;;) doFillAndSaveUser();
+			for(;;){
+				try{
+					doFillAndSaveUser();
+				}
+				catch(Throwable e){
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 	

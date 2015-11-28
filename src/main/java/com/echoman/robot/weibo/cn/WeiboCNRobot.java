@@ -105,7 +105,7 @@ public class WeiboCNRobot extends AbstractRobot {
 		for(int i = 1; i <= 50; i++){
 			Set<WeiboUser> users = helper.doSearchUserCN(keyword, i);
 			LOG.info("Page {}, Search {} users: {}", new Object[]{i, users.size(), users});
-//			LOG.info("FillUserInfo.Queue.size: {}", WeiboCNScheduler.instance().taskSize());
+			LOG.info("FillUserInfo.Queue.size: {}", WeiboCNScheduler.instance().taskSize());
 //			LOG.info("SuperDao.Queue.size: {}", WeiboCNScheduler.instance().dbTaskSize());
 //			LOG.info(WeiboCNScheduler.instance().stats());
 			if(users.size() == 0) break;

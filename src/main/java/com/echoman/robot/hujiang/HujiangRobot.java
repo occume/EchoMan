@@ -166,4 +166,9 @@ public class HujiangRobot extends  AbstractRobot{
 	public String getJSFileDirectory() {
 		return "com/echoman/robot/hujiang/";
 	}
+
+	@Override
+	public boolean isLogin() {
+		return false;
+	}
 }

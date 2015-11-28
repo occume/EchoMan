@@ -10,7 +10,7 @@ public class SendTasksLog implements Storable{
 	private String 		articleId;
 	private String 		userId;
 	private String 		userName;
-	private Date		createDate;
+	private Date		createDate = new Date();
 	
 	public SendTasksLog(){}
 	

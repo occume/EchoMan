@@ -37,7 +37,7 @@ public class WeiboScheduler {
 	private AsyncSuperDao asyncDao;
 	
 	public WeiboScheduler(){
-		asyncDao = new AsyncSuperDao();
+		asyncDao = new AsyncSuperDao("");
 		accQueue.addAll(Config.getRobotBeans(RobotType.WEIBO));
 		changeCurrRobot();
 	}
@@ -126,7 +126,7 @@ public class WeiboScheduler {
 			WeiboUser user = takeUser();
 			completeQueue.add(user);
 			
-			currRobot.getFollows(user.getUid());
+			currRobot.getFollows(user.getUserId());
 			Thread.sleep(CommonUtil.random(5000, 20000));
 		} catch (Exception e) {
 			e.printStackTrace();
