@@ -70,4 +70,9 @@ public class SendTasksLog implements Storable{
 				+ ", userId=" + userId + ", userName=" + userName + "]";
 	}
 
+	@Override
+	public String getUid() {
+		return tasksId;
+	}
+
 }

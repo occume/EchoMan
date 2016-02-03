@@ -6,12 +6,18 @@ public class CommonUtil {
 		return (int) (Math.random() * (to - from) + from);
 	}
 	
+	/**
+	 * 
+	 * @param from
+	 * @param to
+	 */
 	public static void wait2(int from, int to){
 		try {
 			Thread.sleep(random(from, to));
 		} catch (InterruptedException e) {
 		}
 	}
+	
 	
 	/**
 	 * 

@@ -8,19 +8,14 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.script.ScriptException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-
 import com.echoman.model.RobotBean;
 import com.echoman.robot.AbstractRobot;
 import com.echoman.robot.Robot;
+import com.echoman.robot.qq.model.GroupBox;
 import com.echoman.robot.qq.model.QqGroupMsg;
-import com.echoman.storage.AsyncSuperDao;
 
 public class QQRobot extends AbstractRobot{
 	
@@ -79,20 +74,16 @@ public class QQRobot extends AbstractRobot{
 //		System.out.println(html);
 	}
 	
-	public Map<Long, String> qqGroupList() throws Exception{
+	public Map<Long, String> getGroupList(){
+
+		return helper.getGroupList();
 		
-		getBkn(http.getCookie("skey"));
+	}
+	
+	public GroupBox getGroupInfo(long groupId){
 		
-		String url = "http://qun.qzone.qq.com/cgi-bin/get_group_list?"
-				+ "groupcount=4&count=4&callbackFun=_GetGroupPortal&"
-				+ "uin="+ account +"&"
-				+ "g_tk="+ bkn +"&"
-				+ "ua=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20WOW64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F45.0.2454.85%20Safari%2F537.36";
+		return helper.getGroupInfo(groupId);
 		
-		String html = http.get(url);
-		System.out.println(html);
-		
-		return pareseGroupList(html);
 	}
 	
 	public void batchGroupSign(){
@@ -103,32 +94,13 @@ public class QQRobot extends AbstractRobot{
 		}
 	}
 	
-	private Map<Long, String> pareseGroupList(String script) throws Exception{
-		
-		URL underscore = QQRobot.class.getClassLoader().getResource("com/echoman/robot/qq/underscore.js");
-		URL getGroupList = QQRobot.class.getClassLoader().getResource("com/echoman/robot/qq/getGroupList.js");
-		
-		FileReader reader1 = new FileReader(new File(underscore.getPath()));
-		FileReader reader2 = new FileReader(new File(getGroupList.getPath()));
-		
-		Map<Long, String> groupMap = new HashMap<>();
-		bds.put("groupMap", groupMap);
-		
-		engine.eval(reader1);
-		engine.eval(reader2);
-		engine.eval(script);
-		
-		LOG.info("Get groupMap, num: " + groupMap.size());
-		return groupMap;
-	}
-	
 	private void doBatchGroupSign() throws Exception{
 		
 		if(!isLogin()){
 			login();
 		}
 		
-		Map<Long, String> groupList = qqGroupList();
+		Map<Long, String> groupList = getGroupList();
 
 		for(long groupId: groupList.keySet()){
 			qqGroupSign(String.valueOf(groupId));
@@ -138,14 +110,13 @@ public class QQRobot extends AbstractRobot{
 	}
 	
 	private String bkn;
-	private AsyncSuperDao dao = new AsyncSuperDao("jtyd_", 3);
 	
 	public void showRoamMessage(String groupId) throws Exception{
 		
 		List<QqGroupMsg> msgList = helper.showRoamMessage(groupId);
 		
 		for(QqGroupMsg msg: msgList){
-			dao.save(msg);
+//			dao.save(msg);
 		}
 		
 	}

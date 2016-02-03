@@ -20,9 +20,12 @@ public class DataSourceFactory {
 //			String url = "jdbc:mysql://rdsy32ua2y32ua2.mysql.rds.aliyuncs.com:3306/rcst7f6k57654t45?useUnicode=false&characterEncoding=UTF-8";
 //			String username = "rcst7f6k57654t45";
 //			String password = "tb7778479";
-			String url = "jdbc:mysql://202.197.237.29:3306/jtyd?useUnicode=false&characterEncoding=UTF-8";
-			String username = "idtn";
-			String password = "idtn123";
+//			String url = "jdbc:mysql://202.197.237.29:3306/jtyd?useUnicode=false&characterEncoding=UTF-8";
+//			String username = "idtn";
+//			String password = "idtn123";
+			String url = "jdbc:mysql://101.200.87.104:3306/git_jeeshop?useUnicode=false&characterEncoding=UTF-8";
+			String username = "root";
+			String password = "jtyd123456";
 			
 			dataSource = new ComboPooledDataSource();
 			dataSource.setDriverClass(driver);

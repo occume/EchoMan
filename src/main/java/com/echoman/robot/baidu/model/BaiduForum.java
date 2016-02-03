@@ -86,4 +86,9 @@ public class BaiduForum implements Storable{
 				+ slogan + ", memberNum=" + memberNum + ", postNum=" + postNum
 				+ "]";
 	}
+
+	@Override
+	public String getUid() {
+		return fid;
+	}
 }

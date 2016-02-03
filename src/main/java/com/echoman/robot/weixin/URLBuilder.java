@@ -1,6 +1,8 @@
 package com.echoman.robot.weixin;
 
 public class URLBuilder {
+	
+	
 
 	public static String gzhQueryURL(String keyWord, int type){
 		String url = baseQueryURL();

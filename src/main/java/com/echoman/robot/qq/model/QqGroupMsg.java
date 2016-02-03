@@ -69,4 +69,9 @@ public class QqGroupMsg implements Storable{
 		return "GroupMsg [groupId=" + groupId + ", qq=" + qq + ", nickName="
 				+ nickName + ", content=" + content + "]";
 	}
+
+	@Override
+	public String getUid() {
+		return null;
+	}
 }

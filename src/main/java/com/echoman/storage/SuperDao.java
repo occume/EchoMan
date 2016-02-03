@@ -47,12 +47,19 @@ public class SuperDao implements Dao<Storable> {
 	}
 
 	@Override
-	public int save(Storable bean) throws SQLException {
-		
+	public int save(Storable bean){
+		try {
+			return save0(bean);
+		} catch (SQLException e) {
+			LOG.error("Save error, {}", bean, e);
+		}
+		return 0;
+	}
+	
+	private int save0(Storable bean) throws SQLException{
 		if(bean == null){
 			throw new IllegalArgumentException("bean must not be null");
 		}
-		
 		return batchSave(Lists.newArrayList(bean))[0];
 	}
 	

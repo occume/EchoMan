@@ -41,17 +41,16 @@ public class Router {
 		
 		System.out.println(vender + " " + userName);
 		
-		Robots robotManager = Robots.instance();
-		Robot robot = robotManager.getRobot(vender, userName);
+//		Robot robot = robotManager.getRobot(vender, userName);
+//		
+//		if(robot == null){
+//			robot = robotManager.newRobot(vender);
+//			robotManager.enroll(vender, userName, robot);
+//		}
 		
-		if(robot == null){
-			robot = robotManager.newRobot(vender);
-			robotManager.enroll(vender, userName, robot);
-		}
-		
-		Response resp = robot.execute(request.getParameterMap());
+//		Response resp = robot.execute(request.getParameterMap());
 
-		return resp;
+		return null;
 	}
 	
 	@RequestMapping(value="/userInfos", produces=CONTENT_JSON)

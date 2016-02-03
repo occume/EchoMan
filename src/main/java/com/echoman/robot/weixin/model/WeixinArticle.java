@@ -98,4 +98,8 @@ public class WeixinArticle implements Storable{
 				+ articleName + ", articleDesc=" + articleDesc
 				+ ", articleKeywords=" + articleKeywords + "]";
 	}
+	@Override
+	public String getUid() {
+		return id + "";
+	}
 }

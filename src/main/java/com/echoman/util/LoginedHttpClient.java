@@ -1,5 +1,6 @@
 package com.echoman.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,6 +30,8 @@ import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
 import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.cookie.MalformedCookieException;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
@@ -230,34 +233,45 @@ public class LoginedHttpClient {
 	}
 	
 	public String post(String url){
-		
-		String ret = null;
-		try {
-			
-			ret = doPost(url, null, null);
-			
-		} catch (IOException e) {
-			LOG.error("Remote request error: {}", e.getMessage());
-		}
-		return ret;
+		return post(url, null, null);
 	}
-	
+
 	public String post(String url, Map<String, Object> params, Map<String, String> headers){
-		
+		return post(url, params, headers, null, false);
+	}
+	
+	public String post(String url, Map<String, Object> params, 
+			Map<String, String> headers, boolean allowRedirect){
+		return post(url, params, headers, null, allowRedirect);
+	}
+	
+	public String post(String url, Map<String, Object> params, 
+			Map<String, String> headers, String attach){
+		return post(url, params, headers, attach, false);
+	}
+	/**
+	 * post with attachment
+	 * @param url
+	 * @param params
+	 * @param headers
+	 * @param attach
+	 * @param allowRedirect
+	 * @return
+	 */
+	public String post(String url, Map<String, Object> params, 
+			Map<String, String> headers, String attach, boolean allowRedirect){
 		String ret = null;
 		try {
-			
-			ret = doPost(url, params, headers);
-			
+			ret = doPost(url, params, headers, attach, allowRedirect);
 		} catch (IOException e) {
 			LOG.error("Remote request error: {}", e.getMessage());
 		}
 		return ret;
 	}
 	
-	private String doPost(String url, Map<String, Object> params, Map<String, String> headers)
+	private String doPost(String url, Map<String, Object> params, 
+			Map<String, String> headers, String attach, boolean allowRedirect)
 			throws IOException {
-		
 		/**
 		 * 
 		 */
@@ -276,14 +290,41 @@ public class LoginedHttpClient {
 		}
 
 		HttpPost httpPost = new HttpPost(url);
+		/**
+		 * allow redirect
+		 */
+		if(allowRedirect){
+			httpPost.setConfig(getAllowRedirectReqConf());
+		}
 		
 		if(headers != null){
 			for(Entry<String, String> h: headers.entrySet()){
 				httpPost.setHeader(h.getKey(), h.getValue());
 			}
 		}
+		
+		HttpEntity entity = null;
+		
+		if(attach != null){
+			MultipartEntityBuilder 
+			entityBuilder = 
+			MultipartEntityBuilder.create()
+//			.setCharset(Consts.UTF_8)
+			.addBinaryBody("attachment", new File(attach));
 
-		httpPost.setEntity(new UrlEncodedFormEntity(nvps, Consts.UTF_8));
+			for(NameValuePair nvp: nvps){
+//				StringBody stringBody1 = new StringBody("Message 1", ContentType.MULTIPART_FORM_DATA);
+//				entityBuilder.addPart(name, contentBody)
+				entityBuilder.addTextBody(nvp.getName(), nvp.getValue(), 
+						ContentType.create("multipart/form-data", Consts.UTF_8));
+			}
+			entity = entityBuilder.build();
+		}
+		else{
+			entity = new UrlEncodedFormEntity(nvps, Consts.UTF_8);
+		}
+
+		httpPost.setEntity(entity);
 
 		CloseableHttpResponse response = null;
 		try {

@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,9 @@ import org.slf4j.LoggerFactory;
 import jodd.util.HtmlDecoder;
 
 import com.echoman.robot.AbstractHelper;
+import com.echoman.robot.qq.model.QqGroup;
+import com.echoman.robot.qq.model.GroupBox;
+import com.echoman.robot.qq.model.QqGroupMember;
 import com.echoman.robot.qq.model.QqGroupMsg;
 import com.google.common.collect.Lists;
 
@@ -91,7 +95,16 @@ public class QQRobotHelper extends AbstractHelper{
 //		System.out.println(html);
 	}
 	
-	public Map<Long, String> qqGroupList() throws Exception{
+	public Map<Long, String> getGroupList(){
+		try {
+			return qqGroupList0();
+		} catch (Exception e) {
+			LOG.error("GetGroupList", e);
+		}
+		return Collections.emptyMap();
+	}
+	
+	public Map<Long, String> qqGroupList0() throws Exception{
 		
 		getBkn(http.getCookie("skey"));
 		
@@ -105,6 +118,70 @@ public class QQRobotHelper extends AbstractHelper{
 		System.out.println(html);
 		
 		return pareseGroupList(html);
+	}
+	
+	private Map<Long, String> pareseGroupList(String script) throws Exception{
+		
+		loadAndRunFunction("underscore");
+		loadAndRunFunction("function");
+		
+		Map<Long, String> groupMap = new HashMap<>();
+		setValueOfVar("groupMap", groupMap);
+		
+		runFunction(script);
+
+		LOG.info("Get groupMap, num: " + groupMap.size());
+		return groupMap;
+	}
+	
+	public GroupBox getGroupInfo(long groupId){
+		try {
+			return getGroupInfo0(groupId);
+		} catch (Exception e) {
+			LOG.error("GetGroupInfo", e);
+		}
+		return GroupBox.EMPTY;
+	}
+	
+	public GroupBox getGroupInfo0(long groupId) throws Exception{
+//		String url = "http://qun.qzone.qq.com/group#!/"+ groupId +"/home";
+		
+		getBkn(http.getCookie("skey"));
+		setValueOfVar("gid", groupId);
+		
+		String url = "http://qun.qzone.qq.com/cgi-bin/get_group_member?"
+				+ "callbackFun=_GroupMember&"
+				+ "uin=530050582&"
+				+ "groupid="+ groupId +"&neednum=1&r=0.5278748127166182&"
+				+ "g_tk="+ bkn +"&"
+				+ "ua=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20WOW64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F47.0.2526.73%20Safari%2F537.36";
+		
+		String html = http.get(url);
+		GroupBox box = parseGroupInfo(html);
+		QqGroup group = new QqGroup();
+		group.setId(groupId);
+		group.setFingerMemo(getValueOfVar("fingerMemo"));
+		group.setGroupName(getValueOfVar("groupName"));
+		group.setKlass(Long.valueOf(getValueOfVar("groupClass")));
+		group.setCreateTime(new Date(Long.valueOf(getValueOfVar("createTime") + "000")));
+		
+		box.setGroup(group);
+		return box;
+	}
+	
+	private GroupBox parseGroupInfo(String html){
+		
+		List<QqGroupMember> members = Lists.newArrayList();
+		setValueOfVar("members", members);
+		
+		runFunction(html);
+
+		LOG.info("Get MemberList, num: " + members.size());
+//		System.out.println(members);
+		
+		GroupBox box = new GroupBox(members);
+		
+		return box;
 	}
 	
 	public void batchGroupSign(){
@@ -220,32 +297,13 @@ public class QQRobotHelper extends AbstractHelper{
 		}
 	}
 	
-	private Map<Long, String> pareseGroupList(String script) throws Exception{
-		
-		URL underscore = QQRobotHelper.class.getClassLoader().getResource("com/echoman/robot/qq/underscore.js");
-		URL getGroupList = QQRobotHelper.class.getClassLoader().getResource("com/echoman/robot/qq/getGroupList.js");
-		
-		FileReader reader1 = new FileReader(new File(underscore.getPath()));
-		FileReader reader2 = new FileReader(new File(getGroupList.getPath()));
-		
-		Map<Long, String> groupMap = new HashMap<>();
-		bds.put("groupMap", groupMap);
-		
-		engine.eval(reader1);
-		engine.eval(reader2);
-		engine.eval(script);
-		
-		LOG.info("Get groupMap, num: " + groupMap.size());
-		return groupMap;
-	}
-	
 	private void doBatchGroupSign() throws Exception{
 		
 		if(!isLogin()){
 			login();
 		}
 		
-		Map<Long, String> groupList = qqGroupList();
+		Map<Long, String> groupList = getGroupList();
 
 		for(long groupId: groupList.keySet()){
 			qqGroupSign(String.valueOf(groupId));

@@ -1,81 +1,56 @@
 package com.echoman.robot.weibo.cn;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.echoman.robot.AbstractHelper;
 import com.echoman.robot.weibo.model.WeiboUser;
-import com.echoman.util.Constant;
 import com.echoman.util.DocUtil;
-import com.echoman.util.RegexUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.io.BaseEncoding;
+import com.google.common.collect.Sets;
 
 public class WeiboCNRobotHelper extends AbstractHelper {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(WeiboCNRobotHelper.class);
 	
+	private static int[] sortTypes = {0, 108};
+	private static String[] filterTypes = {"stag", "isv", "all"};
+	
 	private WeiboCNRobot robot;
 	
-	private String retcode;
-	private String servertime;
-	private String pcid;
-	private String nonce;
-	private String pubkey;
-	private String rsakv;
-	private String ssoUrl;
-	private String uniqueid;
-	private String relationMyfollowHtml;
 	private String searchHtml;
 	
 	public WeiboCNRobotHelper(WeiboCNRobot robot){
 		this.robot = robot;
 	}
 	
-	
-	public Set<WeiboUser> getFollows(String id, int page){
+	public Set<WeiboUser> getFollows(WeiboUser user, int page){
 
-		String url = "http://weibo.com/p/100505"+ id +"/follow?page="+ page +"#Pl_Official_HisRelation__62";
+		String url = "http://weibo.cn/"+ user.getUserId() + "/fans?page=" + page;
 		
 		Map<String, String> 
 		headers = getGeneralHeaders();
-		headers.put("Host", "weibo.com");
-		headers.put("Referer", "http://weibo.com/u/"+ uniqueid +"/home");
+		headers.put("Host", "weibo.cn");
+		headers.put("Referer", "http://weibo.cn/u/"+ user.getUserId() );
 		
 		String html = http.get(url, headers);
-		System.out.println(url);
-		System.out.println(html);
-		/**
-		 * you yi xie zhang hao bu neng cha kan follows
-		 */
+		
 		if(Strings.isNullOrEmpty(html)){
 			return Collections.emptySet();
 		}
-		
-		String text = DocUtil.getScriptText1(html, "domid\":\"Pl_Official_HisRelation_");
-
-		if(LOG.isDebugEnabled())
-			LOG.debug("Text: {}", text);
-		
-		runFunction(text);
-		
-		relationMyfollowHtml = getValueOfVar("relationMyfollowHtml");
-		
-		Set<WeiboUser> follows = WeiboCNDocParser.parseFollowsById(relationMyfollowHtml);
-		relationMyfollowHtml = "";
+//		System.out.println(html);
+		Set<WeiboUser> follows = WeiboCNDocParser.parseFollowsById(html, user);
 		return follows;
 	}
 	
@@ -112,7 +87,7 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		headers.put("Host", "weibo.cn");
 		
 		String html = http.get(url, headers, true);
-		System.out.println(html);
+//		System.out.println(html);
 	}
 	
 	public Map<String, Object> getLoginCNParamsMap(){
@@ -153,7 +128,7 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		String html = http.post(url, params, headers);
 		
 		String location = http.getHeaderVal("Location");
-		System.out.println(location);
+		LOG.info("Location1: {}", location);
 		newLogin(location);
 		
 	}
@@ -166,7 +141,7 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		
 		http.get(url, headers);
 		String location = http.getHeaderVal("Location");
-		System.out.println(location);
+		LOG.info("Location2: {}", location);
 		
 		crossLogin(location);
 	}
@@ -179,22 +154,51 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		
 		http.get(url, headers);
 		String location = http.getHeaderVal("Location");
-		System.out.println(location);
+		LOG.info("Location3: {}", location);
 		
-//		doChatUser();
+		if(location.contains("gsid")){
+			LOG.info("Login success");
+		}
+		else{
+			LOG.info(location);
+		}
 	}
 	
 	public Set<WeiboUser> doSearchUserCN(String keyword, int page){
-
-		String url = "http://weibo.cn/find/user?keyword="+ keyword +"&suser=2&page=" + page;
+		return doSearchUserCN(keyword, 0, "", page);
+	}
+	
+	public Set<WeiboUser> doSearchUserCN(String keyword, int sort, String filter, int page){
+		
+		Set<WeiboUser> users = Sets.newHashSet();
 		
 		Map<String, String> 
 		headers = getGeneralHeaders();
 		headers.put("Host", "weibo.cn");
 		headers.put("Referer", "http://weibo.cn/find/user");
 		
+		
+		String url = "http://weibo.cn/search/user/?keyword="+ keyword +"&sort="+ sort +"&filter="+ filter +"&page=" + page;
+		System.out.println(url);
 		String html = http.get(url, headers);
-		return WeiboCNDocParser.parseUserOfSearchCN(html, keyword);
+		
+		users.addAll(WeiboCNDocParser.parseUserOfSearchCN(html, keyword));
+		
+		return users;
+
+//		String url = "http://weibo.cn/find/user?keyword="+ keyword +"&suser=2&page=" + page;
+		
+//		Map<String, String> 
+//		headers = getGeneralHeaders();
+//		headers.put("Host", "weibo.cn");
+//		headers.put("Referer", "http://weibo.cn/find/user");
+//		try {
+//			url = URLEncoder.encode(url, "UTF-8");
+//		} catch (UnsupportedEncodingException e) {
+//			e.printStackTrace();
+//		}
+//		String html = http.get(url, headers);
+//		return WeiboCNDocParser.parseUserOfSearchCN(html, keyword);
 	}
 	
 
@@ -258,7 +262,39 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		
 		System.out.println(" --> " + uid + " " + content);
 		String html = http.post(url, params, headers);
-		System.out.println("---> " + html);
+		String location = http.getLocation();
+		System.out.println("---> " + location);
+	}
+	
+	public boolean doChatUserWithAttach(String uid, String content) {
+		
+		String action = prepaerChat(uid);
+		
+		String url = "http://weibo.cn" + action;
+		LOG.info("Post msg url: {}", url);
+		Map<String, String> 
+		headers = getGeneralHeaders();
+		headers.put("Host", "weibo.cn");
+		headers.put("Referer", "http://weibo.cn/im/chat?uid="+ uid +"&rl=0");
+	
+		Map<String, Object>
+		params = Maps.newHashMap();
+		params.put("content", content);
+		params.put("rl", "1");
+		params.put("act", "send");
+		params.put("uid", uid);
+		
+		LOG.info(" --> {}", (uid + " " + content));
+		String html = http.post(url, params, headers, "conf/aks1.jpg");
+		String location = http.getLocation();
+		
+		if(!Strings.isNullOrEmpty(location)){
+			return true;
+		}
+		else{
+			System.out.println("html---> " + html);
+			return false;
+		}
 	}
 
 	@Override
@@ -279,15 +315,19 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 //		String retcode = RegexUtil.getGroup1(text, "retcode\":(\\d+)");
 //		System.out.println(retcode);
 //		Files.readAllLines(Paths.get("D:/tmp/weibo/page1.txt"), Charset.forName("UTF-8"));
-		WeiboCNRobotHelper helper = new WeiboCNRobotHelper(null);
-		byte[] b1 = Files.readAllBytes(Paths.get("D:/tmp/weibo/page2.txt"));
-		String html = new String(b1, "UTF-8");
-		String text = DocUtil.getScriptText1(html, "domid\":\"Pl_Official_HisRelation_");
-		
-		helper.loadAndRunFunction("function", text);
-		String html1 = helper.getValueOfVar("relationMyfollowHtml");
-	
-		Set<WeiboUser> follows = WeiboCNDocParser.parseFollowsById(html1);
-		System.out.println(follows);
+//		WeiboCNRobotHelper helper = new WeiboCNRobotHelper(null);
+//		byte[] b1 = Files.readAllBytes(Paths.get("D:/tmp/weibo/page2.txt"));
+//		String html = new String(b1, "UTF-8");
+//		String text = DocUtil.getScriptText1(html, "domid\":\"Pl_Official_HisRelation_");
+//		
+//		helper.loadAndRunFunction("function", text);
+//		String html1 = helper.getValueOfVar("relationMyfollowHtml");
+		File f = new File("");
+		File f1 = new File("conf/aks1.jpg");
+		System.out.println(f.getAbsolutePath());
+		System.out.println(f1.getAbsolutePath());
+		System.out.println(f1.exists());
+//		Set<WeiboUser> follows = WeiboCNDocParser.parseFollowsById(html1);
+//		System.out.println(follows);
 	}
 }

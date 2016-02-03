@@ -1,6 +1,8 @@
 package com.echoman.robot.weibo.model;
 
-public class FansKeywords {
+import com.echoman.storage.Storable;
+
+public class FansKeywords implements Storable{
 
 	private String		id;
 	private String 	keywords;
@@ -29,5 +31,17 @@ public class FansKeywords {
 	public String toString() {
 		return "FansKeywords [keywords=" + keywords + ", delFlag=" + delFlag
 				+ "]";
+	}
+	@Override
+	public String getUid() {
+		return id;
+	}
+	@Override
+	public Object[] toArray() {
+		return null;
+	}
+	@Override
+	public Object[] equalValues() {
+		return null;
 	}
 }

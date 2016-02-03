@@ -140,4 +140,10 @@ public class KanzhunRobot extends AbstractRobot {
 //		robot.getCompanys(urls);
 		
 	}
+
+	@Override
+	public boolean isLogin() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

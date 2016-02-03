@@ -73,10 +73,22 @@ public class AsyncSuperDao{
 		Thread saveForumWorke = new Thread(new SaveForumTask(), "DATA-SAVE-WORKER");
 		saveForumWorke.start();
 	}
+	
+	public void saveNow(Storable bean){
+		if(!dao.exist(bean)) dao.save(bean);
+		else LOG.info("Exist Storable: {}", bean);
+	}
 
 	public void save(Storable bean){
 		if(!dao.exist(bean)) taskQueue.add(bean);
 		else LOG.info("Exist Storable: {}", bean);
+	}
+	
+	public void clear(){
+		for(Saver saver: savers.values()){
+			saver.clear();
+		}
+		savers.clear();
 	}
 	
 	private Map<String, Saver> savers = Maps.newHashMap();
@@ -85,6 +97,10 @@ public class AsyncSuperDao{
 		try {
 			
 			Storable bean = taskQueue.take();
+			if(bean == Storable.IAMLATER){
+				clear();
+				return;
+			}
 			String saverKey = bean.getClass().getSimpleName();
 			Saver saver = savers.get(saverKey);
 			if(saver == null){
@@ -115,6 +131,23 @@ public class AsyncSuperDao{
 					}
 				}
 				list.clear();
+			}
+		}
+		
+		public void clear(){
+			if(list.size() > 0){
+				try {
+					dao.batchSave(list);
+					LOG.info("Save {} items", list.size());
+				} catch (SQLException e) {
+					LOG.error("Error saver.doSave ", e);
+					/**
+					 * if error, requeue
+					 */
+					if(e.getMessage().contains("No operations allowed")){
+						for(Storable bean0: list) save(bean0);
+					}
+				}
 			}
 		}
 	}

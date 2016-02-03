@@ -25,4 +25,10 @@ public class YoukuRobot extends AbstractRobot {
 		
 	}
 
+	@Override
+	public boolean isLogin() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

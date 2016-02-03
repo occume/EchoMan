@@ -3,7 +3,6 @@ package com.echoman.robot.weibo.cn;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Map;
@@ -22,24 +21,29 @@ import com.google.common.collect.Sets;
 
 public class WeiboCNDocParser {
 
-	public static Set<WeiboUser> parseFollowsById(String html){
+	public static Set<WeiboUser> parseFollowsById(String html, WeiboUser user){
 		
 		Document doc = Jsoup.parse(html);
-		Elements elems = doc.select(".follow_list .follow_item .mod_info");
+		Elements elems = doc.select(".c table tbody tr");
 		Set<WeiboUser> beans = Sets.newHashSet();
-		
-		for(Element e: elems){
+	
+		for(Element elem: elems){
 			
-			Element a = e.children().first().children().first();
-			String name = a.text();
-//			String href = a.attr("href");
-//			String id0 = RegexUtil.getGroup1(href, "/u/(\\d+)");
-			String usercard = a.attr("usercard");
-			String id0 = RegexUtil.getGroup1(usercard, "id=(\\d+)");
+			Element child1 = elem.child(1);
+			Element child1a = child1.child(0);
+			String name = child1a.text();
+			String href = child1a.attr("href");
+			String id = RegexUtil.getGroup1(href, "/u/(\\d+)");
 			
-			beans.add(new WeiboUser(id0, name));
+			String url = href.substring(15);
+			
+			WeiboUser user0 = new WeiboUser(id, name);
+			user0.setDepth(user.getDepth() + 1);
+			user0.setUrl(url);
+			user0.setGrabTag(user.getUserId());
+			
+			beans.add(user0);
 		}
-		
 		return beans;
 	}
 	
@@ -229,20 +233,12 @@ public class WeiboCNDocParser {
 		return action;
 	}
 	
-	public static void main(String...strings){
-		String html = "<span class=\"tc\">微博[23915]</span>&nbsp;" +
-"<a href=\"/2104483152/follow\">关注[1429]</a>&nbsp;" +
-"<a href=\"/2104483152/fans\">粉丝[12109]</a>&nbsp;" +
-"<a href=\"/attgroup/opening?uid=2104483152\">分组[2]</a>&nbsp;" +
-"<a href=\"/at/weibo?uid=2104483152\">@他的</a>;";
+	public static void main(String...strings) throws IOException{
 		
-		String[] tags = html.split("&nbsp;");
-		
-		for(String lb: tags){
-			String tagName = RegexUtil.getGroup1(lb, "\\[(\\d+)\\]");
-			System.out.println(tagName);
-		}
-		
+		byte[] buf = Files.readAllBytes(Paths.get("D:/tmp/weibocnfans.txt"));
+		String html = new String(buf, "UTF-8");
+		System.out.println(html);
+//		parseFollowsById(html);
 	}
 
 }

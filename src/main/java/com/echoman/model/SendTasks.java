@@ -4,7 +4,8 @@ public class SendTasks {
 
 	private String		id;
 	private String 		articleId;
-	private String 		platformId;
+	private int 		fromPlatformId;
+	private int 		toPlatformId;
 	private String 		userName;
 	private String 		userPassword;
 	private String		fansKeywords;
@@ -21,11 +22,18 @@ public class SendTasks {
 	public void setArticleId(String articleId) {
 		this.articleId = articleId;
 	}
-	public String getPlatformId() {
-		return platformId;
+	
+	public int getFromPlatformId() {
+		return fromPlatformId;
 	}
-	public void setPlatformId(String platformId) {
-		this.platformId = platformId;
+	public void setFromPlatformId(int fromPlatformId) {
+		this.fromPlatformId = fromPlatformId;
+	}
+	public int getToPlatformId() {
+		return toPlatformId;
+	}
+	public void setToPlatformId(int toPlatformId) {
+		this.toPlatformId = toPlatformId;
 	}
 	public String getUserName() {
 		return userName;
@@ -47,8 +55,8 @@ public class SendTasks {
 	}
 	@Override
 	public String toString() {
-		return "SendTasks [articleId=" + articleId + ", platformId="
-				+ platformId + ", userName=" + userName + ", userPassword="
+		return "SendTasks [articleId=" + articleId + ", fromPlatformId="
+				+ fromPlatformId + ", userName=" + userName + ", userPassword="
 				+ userPassword + ", fansKeywords=" + fansKeywords + "]";
 	}
 }

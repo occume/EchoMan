@@ -60,7 +60,7 @@ public abstract class AbstractHelper{
 		}
 	}
 	
-	public void runCallback(JsInvoker invoker, String jsFile, String fun){
+	protected void runCallback(JsInvoker invoker, String jsFile, String fun){
 		try {
 			runCallback0(invoker, jsFile, fun);
 		} catch (Exception e) {
@@ -68,41 +68,41 @@ public abstract class AbstractHelper{
 		}
 	}
 	
-	public void loadAndRunFunction(JsInvoker invoker, String jsFileName, String funName){
+	protected void loadAndRunFunction(JsInvoker invoker, String jsFileName, String funName){
 		runCallback(invoker, jsFileName, funName);
 	}
 	
-	public void loadAndRunFunction(String jsFileName, String funName){
+	protected void loadAndRunFunction(String jsFileName, String funName){
 		loadAndRunFunction(null, jsFileName, funName);
 	}
 	
-	public void loadAndRunFunction(String jsFileName){
+	protected void loadAndRunFunction(String jsFileName){
 		loadAndRunFunction(null, jsFileName, null);
 	}
 	
-	public void runFunction(String funName){
+	protected void runFunction(String funName){
 		runCallback(null, null, funName);
 	}
 	
-	public void runStatement(String statement){
+	protected void runStatement(String statement){
 		runFunction(statement);
 	}
 	
-	public String getValueOfVar(String name){
+	protected String getValueOfVar(String name){
 		return bds.get(name).toString();
 	}
 	
-	public void setValueOfVar(String name, String value){
+	protected void setValueOfVar(String name, Object value){
 		bds.put(name, value);
 	}
 	
 	public abstract String getJSFileDirectory();
 	
-	public Map<String, Object> getParamsMap(){
+	protected Map<String, Object> getParamsMap(){
 		return Maps.newHashMap();
 	}
 	
-	public Map<String, String> getGeneralHeaders(){
+	protected Map<String, String> getGeneralHeaders(){
 		
 		Map<String, String> hds = new HashMap<>();
 

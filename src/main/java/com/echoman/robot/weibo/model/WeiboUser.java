@@ -36,6 +36,7 @@ public class WeiboUser implements Storable{
 	private String	grabTag;
 	private String 	classTag;
 	private Date	fetchedTime = new Date();
+	private int		depth = 1;
 	
 	public WeiboUser(){}
 	
@@ -44,10 +45,16 @@ public class WeiboUser implements Storable{
 		this.userName = userName;
 	}
 	
+	public WeiboUser(String userId, String userName, int depth) {
+		this.userId = userId;
+		this.userName = userName;
+		this.depth = depth;
+	}
+	
 	@Override
 	public Object[] toArray() {
 		return new Object[]{userId, userName,url,baseAddress,gender,sex,emotion,birthday,blood,constellation,intro,blog,msn,qq,school,company,companyAddr,
-				companyJob,tag,attentions,fans,sendCount,grabTag,classTag,fetchedTime};
+				companyJob,tag,attentions,fans,sendCount,grabTag,classTag,fetchedTime, depth};
 	}
 	
 	@Override
@@ -255,6 +262,14 @@ public class WeiboUser implements Storable{
 		this.fetchedTime = fetchedTime;
 	}
 
+	public int getDepth() {
+		return depth;
+	}
+
+	public void setDepth(int depth) {
+		this.depth = depth;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -282,10 +297,15 @@ public class WeiboUser implements Storable{
 
 	@Override
 	public String toString() {
-		return "WeiboUser [userId=" + userId + ", baseAddress=" + baseAddress
+		return "WeiboUser [userId=" + userId +  ", name=" + userName +  ", baseAddress=" + baseAddress
 				+ ", gender=" + gender + ", school=" + school + ", company="
 				+ company + ", attentions=" + attentions + ", grabTag="
 				+ grabTag + "]";
+	}
+
+	@Override
+	public String getUid() {
+		return userId;
 	}
 	
 }

@@ -54,9 +54,7 @@ public class Robots {
 		LOG.info("{} robots are enrolled: {}", robots.size(), robots);
 	}
 	
-	public static Robot newRobot(RobotType type){
-		return Factorys.getFactory(type).newRobot(RobotBean.EMPTY);
-	}
+	
 	
 	@Scheduled(cron = "0 30 10 * * *")
 	public void backgroundSign(){

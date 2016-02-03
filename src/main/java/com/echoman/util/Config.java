@@ -1,5 +1,7 @@
 package com.echoman.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -35,10 +37,22 @@ public class Config {
 	}
 	
 	private static void getConfigFile(){
-
-		Resource res = new ClassPathResource("/" + CONFIG_FILENAME);
+		
+			String path;
+			String osName = System.getProperty("os.name");
+			if(osName != null && osName.toLowerCase().contains("windows")) {//for local debug
+//				path = "../EchoMan/conf/";
+				path = "../EchoMan/conf/";
+			} else {
+				path = "../conf/";
+			}
+		
+		File f = new File(path + CONFIG_FILENAME);
+		System.out.println(f);
+//		Resource res = new ClassPathResource("/" + CONFIG_FILENAME);
 		try {
-			InputStream ins = res.getInputStream();
+//			InputStream ins = res.getInputStream();
+			InputStream ins = new FileInputStream(f);
 			doc = Jsoup.parse(ins, "UTF-8", "");
 		} catch (IOException e) {
 			LOG.error("Fail to read config, {}", e);

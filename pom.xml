@@ -1,50 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">  
-	
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+	
   <groupId>com.echoman</groupId>
   <artifactId>EchoMan</artifactId>
   <version>1.0.0</version>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   
-  <profiles>
-		<profile>
-            <id>dev</id>
-            <properties>
-                <package.environment>_dev</package.environment>
-            </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-        <profile>
-            <id>prod</id>
-            <properties>
-                <package.environment>_prod</package.environment>
-            </properties>
-        </profile>
-	</profiles>
-	
+  <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyy_MM_dd_HH_mm_ss</maven.build.timestamp.format>
+		<index>EchoMan</index>
+		<timestamp>${maven.build.timestamp}</timestamp>
+		<version.name>${index}_${app}_v${project.version}_t${timestamp}</version.name>
+		<version.dir>${basedir}/target/${version.name}</version.dir>
+		<server.path>/opt/echoman/app</server.path>
+	</properties>
+ 
 	<build>
 		<finalName>echoman</finalName>
-		<resources>
-			<resource>
-                <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <excludes>
-                    <exclude>_dev/*</exclude>
-                    <exclude>_prod/*</exclude>
-                </excludes>
-            </resource>
-        </resources>
 		<plugins>
+		
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -55,55 +31,151 @@
 					<encoding>UTF8</encoding>
 				</configuration>
 			</plugin>
-			<plugin>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.5</version>
-				<configuration>
-                    <archive>
-                        <addMavenDescriptor>false</addMavenDescriptor>
-                    </archive>
-                    <warName>echoman</warName>
-                    <webResources>
-                        <resource>
-                            <directory>src/main/resources/${package.environment}</directory>
-                            <targetPath>WEB-INF/classes</targetPath>
-                            <filtering>true</filtering>
-                        </resource>
-                        <resource>
-                            <directory>src/main/resources</directory>
-                            <targetPath>WEB-INF/classes</targetPath>
-                            <excludes>
-		                    <exclude>_dev/*</exclude>
-		                    <exclude>_prod/*</exclude>
-		                </excludes>
-                            <filtering>true</filtering>
-                        </resource>
-                    </webResources>
-                </configuration>
+			
+             <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
-			<plugin>  
-                <groupId>org.apache.maven.plugins</groupId>  
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                	<excludes>
-			               <exclude>**/beans.xml</exclude>
-			               <exclude>**/mvc-core.xml</exclude>
-			        </excludes>
-                </configuration>
-                <executions>  
-                    <execution>  
-                        <phase>package</phase>  
-                        <goals>  
-                            <goal>jar</goal>  
-                        </goals>  
-                        <configuration>
-                            <finalName>echoman</finalName>  
-                            <outputDirectory>target</outputDirectory>
-                        </configuration>
-                    </execution>  
-                </executions>
-            </plugin>
+			
+             <plugin>  
+				<artifactId>maven-dependency-plugin</artifactId>  
+				<version>2.1</version>  
+				<executions>  
+					<execution>  
+						<id>copy-searchengine-dependencies</id>  
+						<phase>prepare-package</phase>  
+						<goals>  
+							<goal>copy-dependencies</goal>  
+						</goals> 
+						<configuration>  
+							<classifier>sources</classifier>
+							<excludeTransitive>true</excludeTransitive>
+							<outputDirectory>${version.dir}/lib</outputDirectory>  
+							<includeGroupIds>com.echoman</includeGroupIds>
+						</configuration>  						
+					</execution>  
+					<execution>  
+						<id>copy-thirdparty-dependencies</id>  
+						<phase>prepare-package</phase>  
+						<goals>  
+							<goal>copy-dependencies</goal>  
+						</goals> 
+						<configuration>  
+							<excludeTransitive>false</excludeTransitive>
+							<outputDirectory>${version.dir}/lib</outputDirectory>  
+						</configuration>  						
+					</execution>  					
+				</executions>  
+
+			</plugin>
+            <plugin>
+        		<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+		        <executions>
+		          <execution>
+		            <phase>package</phase>
+		            <configuration>
+		              <target name="makeRunnabePackage">
+		
+		                <!--
+		                  Place any Ant task here. You can add anything
+		                  you can add between <target> and </target> in a
+		                  build.xml.
+		                -->
+		                <echo message="Java Version: ${ant.java.version}${timestamp}"/>
+		                <echo message="${version.name}"/>
+		                <echo message="${version.dir}"/>
+		                <echo message="${basedir}"/>
+		                
+		                <copy todir="${version.dir}">
+							<fileset dir="${basedir}/target">
+								<include name="${project.build.finalName}*.jar"/>
+							</fileset>
+							
+							<fileSet dir="/">
+								<include name="README.md"/>
+							</fileSet>
+							
+							<fileSet dir="/">
+								<include name="config.xml"/>
+							</fileSet>
+							
+							<fileSet dir="/">
+								<include name="start.bat"/>
+								<include name="stop.bat"/>
+							</fileSet>
+									
+							<fileset dir="../">
+								<include name="bin/*"/>
+								<include name="run.sh"/>
+								<include name="pinyin.txt"/>
+								<include name="index.name"/>
+								<include name="app.name"/>
+							</fileset>
+								
+							<fileset dir="./">
+								<include name="conf/*"/>
+								<include name="bin/*"/>
+							</fileset>
+						</copy>
+		                
+		              </target>
+		            </configuration>
+		            <goals>
+		              <goal>run</goal>
+		            </goals>
+		          </execution>
+		        </executions>
+		      </plugin>
+            
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>
+											[2.1,)
+										</versionRange>
+										<goals>
+											<goal>
+												copy-dependencies
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
   
   	<dependencies>
@@ -280,6 +352,18 @@
 			<groupId>xml-apis</groupId>
 			<artifactId>xml-apis</artifactId>
 			<version>1.4.01</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.20</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
 		</dependency>
 		
   	</dependencies>
