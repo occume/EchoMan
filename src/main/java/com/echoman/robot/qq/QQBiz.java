@@ -10,6 +10,7 @@ import com.echoman.model.RobotBean;
 import com.echoman.robot.qq.model.QqGroup;
 import com.echoman.robot.qq.model.GroupBox;
 import com.echoman.robot.qq.model.QqGroupMember;
+import com.echoman.robot.qq.model.QqGroupMsg;
 import com.echoman.storage.AsyncSuperDao;
 import com.echoman.storage.Storable;
 import com.echoman.util.CommonUtil;
@@ -57,5 +58,40 @@ public class QQBiz {
 		}
 		dao.save(Storable.IAMLATER);
 //		System.out.println(groupMap);
+	}
+	
+//	public void watchGroupMessage(){
+//		for(;;){
+//			fetctGroupMessage();
+//			CommonUtil.wait2(3000, 5000);
+//		}
+//	}
+	
+	public void watchGroupMessage(){
+		for(;;){
+			fetctGroupMessage("320349384");
+			CommonUtil.wait2(1000, 3000);
+		}
+	}
+	
+	private void fetctGroupMessage(String... groupIds){
+		for(String gid: groupIds){
+			fetctGroupMessage(gid);
+			CommonUtil.wait2(50, 100);
+		}
+	}
+	
+	private void fetctGroupMessage(String groupId){
+		
+		LOG.info("--- Message --- " + groupId);
+		
+		List<QqGroupMsg> msgs = currRobot.showRoamMessage(groupId);
+		
+		for(QqGroupMsg msg: msgs){
+//			if(msg.getQq() == 857539169){
+				System.out.println(msg);
+//			}
+		}
+		
 	}
 }

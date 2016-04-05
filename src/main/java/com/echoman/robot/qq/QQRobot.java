@@ -5,12 +5,16 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.script.ScriptException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.echoman.model.RobotBean;
 import com.echoman.robot.AbstractRobot;
 import com.echoman.robot.Robot;
@@ -111,7 +115,18 @@ public class QQRobot extends AbstractRobot{
 	
 	private String bkn;
 	
-	public void showRoamMessage(String groupId) throws Exception{
+	public List<QqGroupMsg> showRoamMessage(String groupId){
+		
+		try {
+			return showRoamMessage0(groupId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Collections.emptyList();
+	}
+	
+	public List<QqGroupMsg> showRoamMessage0(String groupId) throws Exception{
 		
 		List<QqGroupMsg> msgList = helper.showRoamMessage(groupId);
 		
@@ -119,6 +134,7 @@ public class QQRobot extends AbstractRobot{
 //			dao.save(msg);
 		}
 		
+		return msgList;
 	}
 	
 	private void getBkn(String skey) throws FileNotFoundException, ScriptException, URISyntaxException{

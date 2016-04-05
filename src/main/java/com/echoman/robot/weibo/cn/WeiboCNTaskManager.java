@@ -13,6 +13,7 @@ import weibo4j.Timeline;
 import weibo4j.Weibo;
 import weibo4j.http.ImageItem;
 import weibo4j.model.Status;
+import weibo4j.model.WeiboException;
 
 import com.echoman.model.RobotBean;
 import com.echoman.model.SendTasks;
@@ -180,7 +181,64 @@ public class WeiboCNTaskManager {
 		}
 	}
 
+	String[] users = {"@金小麦5981", "@西北神牛", "@硅谷神牛", "@大秦神牛"};
+	String[] contents = {
+		"你好世界",
+		"瞻彼淇奥，绿竹猗猗",
+		"有匪君子",
+		"如切如磋，如琢如磨",
+		"瑟兮僴兮，赫兮咺兮",
+		"有匪君子，终不可谖兮",
+		"瞻彼淇奥，绿竹青青",
+		"充耳琇莹，会弁如星",
+		"瞻彼淇奥，绿竹如箦",
+		"如金如锡，如圭如璧",
+		"宽兮绰兮，猗重较兮",
+		"善戏谑兮，不为虐兮",
+		
+		"考槃在涧",
+		"硕人之宽",
+		"独寐寤言",
+		"永矢弗谖",
+		"考槃在阿",
+		"硕人之薖",
+		"独寐寤歌",
+		"永矢弗过",
+		"考槃在陆",
+		"硕人之轴",
+		"独寐寤宿",
+		"永矢弗告",
+	};
+	/**
+	 * 不用频率，不同内容
+	 * @param users
+	 */
+	public void test(){
+		String access_token = "2.004OMbyBSPZlZD2cb49a925dagPjxD";
+		Timeline tm = new Timeline(access_token);
+		int userSize = users.length;
+		int contentSize = contents.length;
+		
+		for(;;){
+			String user = users[CommonUtil.random(0, userSize)];
+			String content = contents[CommonUtil.random(0, contentSize)];
+			String message = user + " " + content;
+			System.out.println(">>>: " + message);
+			send(tm, message);
+			CommonUtil.wait2(80 * 1000, 120 * 1000);
+		}
+	}
+	
+	private void send(Timeline tm, String message){
+		try {
+			Status status = tm.updateStatus(message);
+			System.out.println(status.toString());
+		} catch (WeiboException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String...strings){
-		new WeiboCNTaskManager(null).Advertise("金小麦5981");
+		new WeiboCNTaskManager(null).test();
 	}
 }

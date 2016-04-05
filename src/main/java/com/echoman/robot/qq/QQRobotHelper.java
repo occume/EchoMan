@@ -328,7 +328,7 @@ public class QQRobotHelper extends AbstractHelper{
 		Map<String, String> hds0 = getGeneralHeaders();
 		hds0.put("Host", "msgwall.qun.qq.com");		
 		String html = http.get(url0, hds0);
-		
+//		System.out.println(html);
 		Document doc = Jsoup.parse(html);
 		Elements scripts = doc.select("script");
 		
@@ -338,13 +338,16 @@ public class QQRobotHelper extends AbstractHelper{
 		String indexJsUrl = "";
 		for(Element script: scripts){
 			String attr = script.attr("src");
-			if(attr.contains("s.url.cn/qqun/qun/msgwall/js")){
+			if(attr.contains("s1.url.cn/qqun/qun/msgwall/js")){
 				indexJsUrl = attr;
 			}
 		}
 		
-		Pattern pattern = Pattern.compile("pullLen:(\\d+)");
+//		System.out.println(indexJsUrl);
+		
 		html = http.get(indexJsUrl);
+		
+		Pattern pattern = Pattern.compile("pullLen:(\\d+)");
 		Matcher matcher = pattern.matcher(html);
 		
 		if(matcher.find()){
@@ -391,6 +394,9 @@ public class QQRobotHelper extends AbstractHelper{
 		
 		JSONObject json = new JSONObject(html);
 		
+		if(!json.has("list")){
+			return Collections.emptyList();
+		}
 		JSONObject map = json.getJSONObject("list");
 		
 		JSONObject result = json.getJSONObject("result");

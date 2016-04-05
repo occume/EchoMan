@@ -127,6 +127,8 @@ public class WeiboCNRobotHelper extends AbstractHelper {
 		
 		String html = http.post(url, params, headers);
 		
+		System.out.println(html);
+		
 		String location = http.getHeaderVal("Location");
 		LOG.info("Location1: {}", location);
 		newLogin(location);

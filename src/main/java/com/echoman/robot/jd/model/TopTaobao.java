@@ -22,7 +22,7 @@ public class TopTaobao implements Storable{
 	
 	@Override
 	public String toString() {
-		return "TopTaobao [id=" + id + ", keywords=" + keyword + "]";
+		return "TopTaobao [id=" + id + ", keyword=" + keyword + "]";
 	}
 	@Override
 	public String getUid() {

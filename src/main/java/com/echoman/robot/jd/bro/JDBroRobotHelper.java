@@ -2,7 +2,6 @@ package com.echoman.robot.jd.bro;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -79,7 +78,8 @@ public class JDBroRobotHelper extends AbstractHelper {
 	}
 	
 	private List<TopTaobao> getGrabKeywords(){
-		String sql = "select * from sph_top_taobao where id > 167";
+//		String sql = "select id, name as keyword from t_catalog where id > 178";
+		String sql = "select id, name as keyword from t_catalog";
 		List<TopTaobao> list = Lists.newArrayList();
 		try {
 			 list = dao.superDao().getBeans(sql, TopTaobao.class);
@@ -93,7 +93,17 @@ public class JDBroRobotHelper extends AbstractHelper {
 		List<TopTaobao> list = getGrabKeywords();
 		for(TopTaobao tt: list){
 			for(int i = 1; i <= 10; i++){
-				getProductListByPage(i, tt.getKeyword());
+				String keyword = tt.getKeyword();
+				if(keyword.contains("、")){
+					String[] kws = keyword.split("、");
+					for(String kw: kws){
+						getProductListByPage(i, kw);
+						CommonUtil.wait2(1000, 10000);
+					}
+				}
+				else{
+					getProductListByPage(i, tt.getKeyword());
+				}
 				CommonUtil.wait2(1000, 10000);
 			}
 			CommonUtil.wait2(1000, 10000);
@@ -105,7 +115,7 @@ public class JDBroRobotHelper extends AbstractHelper {
 		String searchUrl = "http://media.jd.com/gotoadv/goods?"
 				+ "pageIndex=" + page
 				+ "&pageSize=50"
-				+ "&property=&sort=&adownerType=&pcRate=&wlRate=&category=&category1=0&condition=0&"
+				+ "&property=inOrderComm30Days&sort=desc&adownerType=&pcRate=&wlRate=&category=&category1=0&condition=0&"
 				+ "keyword=" + keyword;
 		
 		driver.get("http://media.jd.com/gotoadv/goods?pageIndex="+ page +"&pageSize=50");
@@ -267,6 +277,10 @@ public class JDBroRobotHelper extends AbstractHelper {
 		});
 		Select select1 = new Select(spaceName);
 		select1.selectByValue("392612005");
+//		List<WebElement> options = select1.getAllSelectedOptions();
+//		for(WebElement option: options){
+//			option.getText().
+//		}
 		
 		WebElement getcodeBtn = driver.findElement(By.id("getcode-btn"));
 		getcodeBtn.click();

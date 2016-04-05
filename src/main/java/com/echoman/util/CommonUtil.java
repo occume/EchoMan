@@ -18,7 +18,6 @@ public class CommonUtil {
 		}
 	}
 	
-	
 	/**
 	 * 
 	 * @param name
